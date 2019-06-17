@@ -37,7 +37,7 @@ const (
 )
 
 /*
-ResourceCache -->cache["ROLE"]->Resourc{package:roles,filename:deployment.go,functions:[]Functions}
+ResourceCache -->cache["ROLE"]->Resourc{package:roles,filename:roles.go,functions:[]Functions}
 */
 //ResourceCache ...
 type ResourceCache struct {
@@ -79,7 +79,7 @@ func (r *ResourceCache) GetKindType(kind KindType) (*Resource, error) {
 	if value, ok := r.cache[kind]; ok {
 		return value, nil
 	}
-	return nil, errors.New("Key not found ")
+	return nil, errors.New("key not found")
 
 }
 
