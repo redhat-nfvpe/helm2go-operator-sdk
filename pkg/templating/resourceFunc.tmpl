@@ -1,0 +1,22 @@
+package {{ .PackageName }}
+
+import (
+    {{range $index, $statement := .ImportStatements}}
+        {{ $statement }}
+    {{ end }}
+)
+
+// New{{ .ResourceName }}ForCR ...
+func New{{ .ResourceName }}ForCR(r {{ .ServiceName }}) {{ .ResourceType }}{
+    var e {{ .ResourceType }}
+    elemYaml := `
+    {{ .ResourceJSON }}
+    `
+    // Unmarshal Specified YAML to Kubernetes Resource
+    err := yaml.Unmarshal([]byte(elemYaml), e)
+    if err != nil {
+        panic(err)
+    }
+    return e
+}
+

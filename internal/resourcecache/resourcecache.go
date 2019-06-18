@@ -14,27 +14,30 @@ type PackageType string
 
 //const for packagename types
 const (
-	PackageTypeRoles       PackageType = "roles"
-	PackageTypeDeployments             = "deployments"
-	PackageTypeContainers              = "containers"
-	PackageTypePods                    = "pods"
-	PackageTypeSecrets                 = "secrets"
-	PackageTypeDaemonSet               = "daemonset"
-	PackageTypeVolumes                 = "volumes"
-	PackageTypeConfigMaps              = "configmaps"
+	PackageTypeRoles        PackageType = "roles"
+	PackageTypeDeployments              = "deployments"
+	PackageTypeContainers               = "containers"
+	PackageTypePods                     = "pods"
+	PackageTypeSecrets                  = "secrets"
+	PackageTypeDaemonSet                = "daemonset"
+	PackageTypeVolumes                  = "volumes"
+	PackageTypeConfigMaps               = "configmaps"
+	PackageTypeServices                 = "services"
+	PackageTypeRoleBindings             = "rolebindings"
 )
 
 //const for KindType
 const (
-	KindTypeConfigMap  KindType = "ConfigMap"
-	KindTypeDeployment          = "Deployment"
-	KindTypeRole                = "Role"
-	KindTypeSecret              = "Secret"
-	KindTypeVolume              = "Volume"
-	KindTypeDaemonSet           = "DaemonSet"
-	KindTypePod                 = "Pod"
-	KindTypeContainer           = "Container"
-	KindTypeService             = "Service"
+	KindTypeConfigMap   KindType = "ConfigMap"
+	KindTypeDeployment           = "Deployment"
+	KindTypeRole                 = "Role"
+	KindTypeSecret               = "Secret"
+	KindTypeVolume               = "Volume"
+	KindTypeDaemonSet            = "DaemonSet"
+	KindTypePod                  = "Pod"
+	KindTypeContainer            = "Container"
+	KindTypeService              = "Service"
+	KindTypeRoleBinding          = "RoleBinding"
 )
 
 /*
@@ -55,7 +58,7 @@ type Resource struct {
 //ResourceFunction  ...
 type ResourceFunction struct {
 	FunctionName string
-	Data         string
+	Data         interface{}
 }
 
 //NewResourceCache  ...
@@ -63,6 +66,11 @@ func NewResourceCache() *ResourceCache {
 	return &ResourceCache{
 		cache: make(map[KindType]*Resource),
 	}
+}
+
+// GetCache returns the main cache object
+func (r *ResourceCache) GetCache() *map[KindType]*Resource {
+	return &r.cache
 }
 
 //Size  cache items
@@ -114,8 +122,8 @@ func (rs *Resource) GetResourceFunctions() []ResourceFunction {
 }
 
 //SetResourceFunctions ...
-func (rs *Resource) SetResourceFunctions(name string, data string) {
-	f := ResourceFunction{FunctionName: name, Data: data}
+func (rs *Resource) SetResourceFunctions(functionname string, data interface{}) {
+	f := ResourceFunction{FunctionName: functionname, Data: data}
 	rs.Functions = append(rs.Functions, f)
 }
 

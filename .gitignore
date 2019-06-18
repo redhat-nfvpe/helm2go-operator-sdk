@@ -1,3 +1,4 @@
+/vendor/**/.git
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -10,3 +11,10 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+
+## Local helm chart for testing
+test/drone/
+
+## In case I forget to delete temp folder
+temp/
