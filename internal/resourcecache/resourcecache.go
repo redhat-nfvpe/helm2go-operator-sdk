@@ -34,6 +34,7 @@ const (
 	KindTypeDaemonSet           = "DaemonSet"
 	KindTypePod                 = "Pod"
 	KindTypeContainer           = "Container"
+	KindTypeService             = "Service"
 )
 
 /*
