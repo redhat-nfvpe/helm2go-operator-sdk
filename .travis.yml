@@ -1,0 +1,4 @@
+language: go
+go test ./... -v -covermode=count -coverprofile=coverage.out
+go:
+- 1.12.x
