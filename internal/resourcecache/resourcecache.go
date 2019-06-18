@@ -54,7 +54,7 @@ type Resource struct {
 //ResourceFunction  ...
 type ResourceFunction struct {
 	FunctionName string
-	Data         string
+	Data         interface{}
 }
 
 //NewResourceCache  ...
@@ -113,8 +113,8 @@ func (rs *Resource) GetResourceFunctions() []ResourceFunction {
 }
 
 //SetResourceFunctions ...
-func (rs *Resource) SetResourceFunctions(name string, data string) {
-	f := ResourceFunction{FunctionName: name, Data: data}
+func (rs *Resource) SetResourceFunctions(functionname string, data interface{}) {
+	f := ResourceFunction{FunctionName: functionname, Data: data}
 	rs.Functions = append(rs.Functions, f)
 }
 
