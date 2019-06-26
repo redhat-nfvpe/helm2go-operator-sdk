@@ -13,8 +13,9 @@
 *.out
 
 
-## Local helm chart for testing
+## Testing Purposes Only
 test/drone/
-
-## In case I forget to delete temp folder
+test/bitcoind/
+test/tomcat/
 temp/
+test-operator/
