@@ -7,6 +7,7 @@ import (
 
 	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/resourcecache"
 	"github.com/redhat-nfvpe/helm2go-operator-sdk/pkg/load"
+	"github.com/redhat-nfvpe/helm2go-operator-sdk/pkg/render"
 	"github.com/redhat-nfvpe/helm2go-operator-sdk/pkg/templating"
 	"github.com/spf13/cobra"
 	"github.com/tav/golly/log"

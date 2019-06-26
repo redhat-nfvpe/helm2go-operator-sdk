@@ -56,7 +56,7 @@ func getServiceAccount() *v1.ServiceAccount {
 	return serviceaccount
 }
 func TestOneResourceCache(t *testing.T) {
-	resourceCache := GetResourceCacheWithKindOne()
+	resourceCache := GetResConfigMapourceCacheWithKindOne()
 	if size := resourceCache.Size(); size != 1 {
 		t.Errorf("wrong count of cache size , expected 1 and got %d", size)
 	}
