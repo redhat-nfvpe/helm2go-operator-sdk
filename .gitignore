@@ -15,6 +15,8 @@
 
 ## Local helm chart for testing
 test/drone/
+test/bitcoind/
+test/tomcat/
 
 ## In case I forget to delete temp folder
 temp/

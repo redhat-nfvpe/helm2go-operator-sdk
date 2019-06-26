@@ -1,0 +1,7 @@
+err = c.Watch(&source.Kind{Type: &{{.ResourceImportPackage}}.{{.ResourceType}}{}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &{{.OwnerAPIVersion}}.{{.Kind}}{},
+})
+if err != nil {
+    return err
+}

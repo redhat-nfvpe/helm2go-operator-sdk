@@ -55,12 +55,13 @@ func getServiceAccount() *v1.ServiceAccount {
 	}
 	return serviceaccount
 }
-func TestOneResourceCache(t *testing.T) {
-	resourceCache := GetResourceCacheWithKindOne()
-	if size := resourceCache.Size(); size != 1 {
-		t.Errorf("wrong count of cache size , expected 1 and got %d", size)
-	}
-}
+
+// func TestOneResourceCache(t *testing.T) {
+// 	resourceCache := GetResourceConfigMapCacheWithKindOne()
+// 	if size := resourceCache.Size(); size != 1 {
+// 		t.Errorf("wrong count of cache size , expected 1 and got %d", size)
+// 	}
+// }
 
 func TestZeroResource(t *testing.T) {
 	resourceCache := GetResourceCacheWithKindOne()
@@ -101,5 +102,17 @@ func TestDataInterfaceForWrongType(t *testing.T) {
 
 	if r, ok := configmapResource.GetResourceFunctions()[0].Data.(*v1.ConfigMap); ok {
 		t.Errorf("wrong data type  , expected %T and got %T", configmapResource.GetResourceFunctions()[0].Data, r)
+	}
+}
+
+func TestFileName(t *testing.T) {
+	typeString := "Role"
+	var n string
+	if n = nameToFileName(typeString, FileExtensionGo); n != "role.go" {
+		t.Errorf(`Expected "role.go", got: %v\n`, n)
+	}
+	typeString = "RoleBinding"
+	if n = nameToFileName(typeString, FileExtensionGo); n != "roleBinding.go" {
+		t.Errorf(`Expected "roleBinding.go, got: %v\n`, n)
 	}
 }

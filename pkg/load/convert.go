@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"path/filepath"
-	"regexp"
+	"reflect"
 
 	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/resourcecache"
 	v1 "k8s.io/api/apps/v1"
@@ -25,15 +25,13 @@ func YAMLUnmarshalResources(rp string, rc *resourcecache.ResourceCache) (*resour
 		return nil, err
 	}
 
-	for idx, f := range files {
+	for _, f := range files {
 		// obtain the converted result resourceKind
-		fmt.Println(idx)
 		rconfig, err := yamlUnmarshalSingleResource(filepath.Join(rp, f.Name()))
 		if err != nil {
-			if err.Error() == "Empty" || err.Error() == "Not YAML" {
+			if err.Error() == "Empty" || err.Error() == "Not YAML" || err.Error() == "Unsupported" {
 				continue
 			}
-			return nil, err
 		}
 		// add resource to cache
 		// initializes the kind type
@@ -44,18 +42,6 @@ func YAMLUnmarshalResources(rp string, rc *resourcecache.ResourceCache) (*resour
 		rs.SetResourceFunctions(string(rconfig.kt), rconfig.r)
 	}
 	return rc, nil
-}
-
-func isEmptyFile(f []byte) bool {
-	if len(f) == 0 {
-		return true
-	}
-	isAlpha := regexp.MustCompile(`^[A-Za-z]+$`).MatchString
-	fmt.Println(string(f))
-	if !isAlpha(string(f)) {
-		return true
-	}
-	return false
 }
 
 // yamlUnmarshalSingleResource converts injected YAML files to a Kubernetes resource; rp is assumed to be an absolute path
@@ -71,52 +57,56 @@ func yamlUnmarshalSingleResource(rp string) (resourceConfig, error) {
 	fileBytes, err := ioutil.ReadFile(rp)
 
 	if isEmptyFile(fileBytes) {
-		fmt.Println("We Empty")
 		return resourceConfig{}, fmt.Errorf("Empty")
 	}
 
-	obj, resourceDefinition, err := decode([]byte(fileBytes), nil, nil)
+	obj, _, err := decode([]byte(fileBytes), nil, nil)
 	if err != nil {
 		return resourceConfig{}, err
 	}
-	// verify that the decoded resource kind is supported
-	k := resourceDefinition.Kind
 
-	// TODO implement KubernetesResource
-	var resource interface{}
+	// verify that the decoded resource kind is supported
 	var kt resourcecache.KindType
 	var pt resourcecache.PackageType
 
-	switch k {
-	case "Pod":
-		resource = obj.(*corev1.Pod)
+	switch obj.(type) {
+	case *corev1.Pod:
 		kt = resourcecache.KindTypePod
 		pt = resourcecache.PackageTypePods
-	case "Role":
-		resource = obj.(*rbacv1.Role)
+	case *rbacv1.Role:
 		kt = resourcecache.KindTypeRole
 		pt = resourcecache.PackageTypeRoles
-	case "RoleBinding":
-		resource = obj.(*rbacv1.RoleBinding)
+	case *rbacv1.RoleBinding:
 		kt = resourcecache.KindTypeRoleBinding
 		pt = resourcecache.PackageTypeRoleBindings
-	case "Service":
-		resource = obj.(*corev1.Service)
-		kt = resourcecache.KindTypeService
-		pt = resourcecache.PackageTypeServices
-	case "Deployment":
-		resource = obj.(*v1.Deployment)
+	case *rbacv1.ClusterRole:
+		kt = resourcecache.KindTypeClusterRole
+		pt = resourcecache.PackageTypeClusterRoles
+	case *rbacv1.ClusterRoleBinding:
+		kt = resourcecache.KindTypeClusterRoleBinding
+		pt = resourcecache.PackageTypeClusterRoleBindings
+	case *v1.Deployment:
 		kt = resourcecache.KindTypeDeployment
 		pt = resourcecache.PackageTypeDeployments
+	case *corev1.Service:
+		kt = resourcecache.KindTypeService
+		pt = resourcecache.PackageTypeServices
+	case *corev1.ServiceAccount:
+		kt = resourcecache.KindTypeServiceAccount
+		pt = resourcecache.PackageTypeServiceAccounts
+	case *corev1.ConfigMap:
+		kt = resourcecache.KindTypeConfigMap
+		pt = resourcecache.PackageTypeConfigMaps
 	default:
-		log.Fatalf("Resource Type %v is Unsupported", k)
-		return resourceConfig{}, err
+		log.Printf("Resource Type %v is Unsupported! Update API Version to Continue.", reflect.TypeOf(obj))
+		return resourceConfig{}, fmt.Errorf("Unsupported")
 	}
 	rk := resourceConfig{
-		resource,
+		obj,
 		kt,
 		pt,
 	}
+
 	return rk, nil
 
 }
