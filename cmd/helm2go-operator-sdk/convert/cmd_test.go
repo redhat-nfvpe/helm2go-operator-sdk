@@ -35,11 +35,6 @@ func TestCommandFlagValidation(t *testing.T) {
 		t.Fatal("Expected Flag Validation Error: --helm-chart-ref")
 	}
 	helmChartRef = "./test/tomcat"
-	kind = ""
-	if err = verifyFlags(); err == nil {
-		t.Logf("Error: %v", err)
-		t.Fatal("Expected Flag Validation Error: kind")
-	}
 	kind = "Tomcat"
 	apiVersion = ""
 	if err = verifyFlags(); err == nil {
@@ -49,6 +44,33 @@ func TestCommandFlagValidation(t *testing.T) {
 	apiVersion = "app.example.com/v1alpha1"
 	if err = verifyFlags(); err != nil {
 		t.Logf("Error: %v", err)
+		t.Fatal("Unexpected Flag Validation Error")
+	}
+}
+
+func TestKindTypeValidation(t *testing.T) {
+	var err error
+	apiVersion = "app.example.com/v1alpha1"
+	helmChartRef = "./test/tomcat"
+	kind = ""
+	if err = verifyFlags(); err == nil {
+		t.Logf("Error: %v", err)
+		t.Fatal("Expected Flag Validation Error: kind")
+	}
+	kind = "tensorflow-notebook"
+	if err = verifyFlags(); err == nil {
+		t.Fatal("Expected Lowercase Flag Validation Error: --kind")
+	}
+	kind = "tensorflowNotebook"
+	if err = verifyFlags(); err == nil {
+		t.Fatal("Expected Lowercase Flag Validation Error: --kind")
+	}
+	kind = "Tensorflow-Notebook"
+	if err = verifyFlags(); err == nil {
+		t.Fatal("Expected Hyphen Flag Validation Error: --kind")
+	}
+	kind = "TensorflowNotebook"
+	if err = verifyFlags(); err != nil {
 		t.Fatal("Unexpected Flag Validation Error")
 	}
 }
@@ -144,4 +166,26 @@ func TestCommandArgumentValidation(t *testing.T) {
 
 	// clean up
 	os.RemoveAll("./test-operator")
+}
+
+func TestHelmChartDownload(t *testing.T) {
+	helmChartRef = "auto-deploy-app"
+	helmChartRepo = "https://charts.gitlab.io/"
+	outputDir = "test-operator"
+	err := loadChart()
+	if err != nil {
+		t.Fatalf("Unexpected Error: %v\n", err)
+	}
+
+	helmChartRef = "not-a-chart"
+	err = loadChart()
+	if err == nil {
+		t.Fatalf("Expected Error Chart Does Not Exist!")
+	}
+
+	helmChartRepo = "invalidrepo.io"
+	err = loadChart()
+	if err == nil {
+		t.Fatalf("Expected Error Invalid Repo!")
+	}
 }

@@ -18,6 +18,9 @@ func verifyFlags() error {
 	if strings.ContainsAny(kind, " ") {
 		return fmt.Errorf("Kind Cannot Contain Spaces")
 	}
+	if err := checkKindString(kind); err != nil {
+		return err
+	}
 	if len(apiVersion) == 0 {
 		return fmt.Errorf("Please Specify Operator API Version")
 	}
@@ -34,6 +37,16 @@ func parse(args []string) error {
 	outputDir = args[0]
 	if len(outputDir) == 0 {
 		return fmt.Errorf("Project Name Must Not Be Empty")
+	}
+	return nil
+}
+
+func checkKindString(kind string) error {
+	if strings.ContainsAny(kind, "-") {
+		return fmt.Errorf("Kind Cannot Contain '-' Character")
+	}
+	if kind != strings.Title(kind) {
+		return fmt.Errorf("Kind Name Must Be Capitalized")
 	}
 	return nil
 }
