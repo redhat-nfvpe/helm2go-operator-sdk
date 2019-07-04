@@ -127,6 +127,21 @@ func getOwnerAPIVersion(apiVersion, kind string) string {
 	return filepath.Base(apiVersion) + kindToLowerCamel(kind)
 }
 
-func getImportMap() map[string]string {
+func getImportMap(outputDir, kind, apiVersion string) map[string]string {
+	controllerKindImports[getAppTypeImport(outputDir, apiVersion)] = getAppTypeImportAbbreviation(kind, apiVersion)
 	return controllerKindImports
+}
+
+func getAppTypeImport(outputDir, apiVersion string) string {
+	// append the correct path
+	// everything after source is in the correct path
+	sp := strings.Split(outputDir, "src/")
+	base := sp[len(sp)-1]
+	result := filepath.Join(base, "pkg", "apis", "apps", apiVersion)
+	return result
+}
+
+func getAppTypeImportAbbreviation(kind, apiVersion string) string {
+	result := apiVersion + kind
+	return result
 }

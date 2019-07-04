@@ -1,8 +1,10 @@
 package load
 
 import (
-	"fmt"
+	"log"
 	"regexp"
+
+	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/validatemap"
 )
 
 func isEmptyFile(f []byte) bool {
@@ -18,10 +20,26 @@ func isEmptyFile(f []byte) bool {
 
 // DeprecatedResourceAPIVersionError is used to alert that a resource api version is deprecated
 type DeprecatedResourceAPIVersionError struct {
+	message      string
 	resourceKind string
 	apiVersion   string
 }
 
 func (d *DeprecatedResourceAPIVersionError) Error() string {
-	return fmt.Sprintf("Resource of Kind: %s has deprecated API Version: %s\n", d.resourceKind, d.apiVersion)
+	return d.message
+}
+
+func containValidMap(fileName string, validMap *validatemap.ValidateMap) bool {
+	// handle empty map lookups
+	if len(validMap.Map) == 0 {
+		return false
+	}
+	if _, ok := validMap.Map[fileName]; ok {
+		return true
+	}
+	return false
+}
+
+func logContinue() {
+	log.Println("Continuing")
 }

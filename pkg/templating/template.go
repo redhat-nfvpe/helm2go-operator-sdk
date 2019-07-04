@@ -202,7 +202,7 @@ func OverwriteController(outputDir, kind, apiVersion string, rcache *resourcecac
 		kind,
 		lowerKind,
 		ownerAPIVersion,
-		getImportMap(),
+		getImportMap(outputDir, kind, apiVersion),
 		watchFuncs,
 	}
 	err = temp.Execute(&wr, c)

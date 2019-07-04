@@ -1,4 +1,4 @@
-err = c.Watch(&source.Kind{Type: &{{.ResourceImportPackage}}.{{.ResourceType}}{}, &handler.EnqueueRequestForOwner{
+err = c.Watch(&source.Kind{Type: &{{.ResourceImportPackage}}.{{.ResourceType}}{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &{{.OwnerAPIVersion}}.{{.Kind}}{},
 })

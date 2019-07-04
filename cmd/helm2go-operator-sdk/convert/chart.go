@@ -51,14 +51,15 @@ func loadChart() error {
 		helmChartRef = chartURL
 		cwd, _ := os.Getwd()
 
-		downloaded, _, err := d.DownloadTo(helmChartRef, helmChartVersion, filepath.Join(cwd, outputDir))
+		downloaded, _, err := d.DownloadTo(helmChartRef, helmChartVersion, cwd)
 		if err != nil {
+			log.Printf("Errored here")
 			return err
 		}
 
 		ud := chartName
 		if !filepath.IsAbs(ud) {
-			ud = filepath.Join(outputDir, ud)
+			ud = filepath.Join(cwd, ud)
 		}
 		if fi, err := os.Stat(ud); err != nil {
 			if err := os.MkdirAll(ud, 0755); err != nil {
@@ -81,29 +82,41 @@ func loadChart() error {
 	return nil
 }
 
-func doHelmGoConversion() (string, error) {
+// doHelmGoConversion takes a chart, injects all necessary values, and returns a cache of the converted Go structs
+func doHelmGoConversion() (*resourcecache.ResourceCache, error) {
+
 	// render the helm charts
 	f, err := render.InjectTemplateValues(c)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	// write the rendered charts to output directory
 	d, _ := os.Getwd()
 	temp, err := render.InjectedToTemp(f, d)
 	if err != nil {
-		return "", err
+		return nil, err
+	}
+
+	to := filepath.Join(temp, chartName, "templates")
+
+	// perform version validation
+	validMap, err := load.PerformResourceValidation(to)
+	if err != nil {
+		return nil, err
 	}
 
 	// convert the helm templates to go structures
-	to := filepath.Join(temp, chartName, "templates")
-
-	rcache, err := load.YAMLUnmarshalResources(to, resourcecache.NewResourceCache())
+	rcache, err := load.YAMLUnmarshalResources(to, validMap, resourcecache.NewResourceCache())
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// clean up temp folder
 	os.RemoveAll(temp)
+	return rcache, nil
+}
+
+func scaffoldOverwrite(outputDir, kind, apiVersion string, rcache *resourcecache.ResourceCache) error {
 
 	ok := templating.OverwriteController(outputDir, kind, apiVersion, rcache)
 	if !ok {
@@ -117,7 +130,7 @@ func doHelmGoConversion() (string, error) {
 	ok = templating.ResourceFileStructure(rcache, resDir)
 	ok = templating.TemplatesToFiles(templates, resDir)
 	if !ok {
-		return "", fmt.Errorf("Writing to File Error")
+		return fmt.Errorf("Writing to File Error")
 	}
-	return "", nil
+	return nil
 }

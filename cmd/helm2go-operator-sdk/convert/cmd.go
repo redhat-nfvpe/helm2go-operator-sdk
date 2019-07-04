@@ -62,21 +62,27 @@ func convertFunc(cmd *cobra.Command, args []string) error {
 
 	log.Infof("🤠 Converting Existing Helm Chart %s to Go Operator %s!", helmChartRef, outputDir)
 
-	//create the operator-sdk scaffold
-	_, err := doGoScaffold()
-	if err != nil {
-		log.Error(err)
-		return err
-	}
-
 	// load the spcecified helm chart
-	err = loadChart()
+	err := loadChart()
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 
-	_, err = doHelmGoConversion()
+	rcache, err := doHelmGoConversion()
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	//create the operator-sdk scaffold
+	_, err = doGoScaffold()
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	err = scaffoldOverwrite(outputDir, kind, apiVersion, rcache)
 	if err != nil {
 		log.Error(err)
 		return err
