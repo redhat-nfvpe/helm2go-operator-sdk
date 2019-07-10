@@ -2,6 +2,9 @@ package convert
 
 import (
 	"fmt"
+	"os/exec"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -49,4 +52,85 @@ func checkKindString(kind string) error {
 		return fmt.Errorf("Kind Name Must Be Capitalized")
 	}
 	return nil
+}
+
+func verifyOperatorSDKVersion() error {
+	var (
+		cmdOut []byte
+		err    error
+	)
+	cmdName := "operator-sdk"
+	cmdArgs := []string{"version"}
+
+	// if operator-sdk is not installed, or not updated this will throw an error
+	if cmdOut, err = exec.Command(cmdName, cmdArgs...).Output(); err != nil {
+		return fmt.Errorf("unexpected error: %v when verifying operator-sdk version; please install operator-sdk or update to latest version", err)
+	}
+	// make sure operator-sdk is atleast version 0.8.0 or higher
+	if err = matchVersion(&cmdOut); err != nil {
+		return fmt.Errorf("unexpected error: %v when verifying operator-sdk version; please update to latest version", err)
+	}
+
+	return nil
+}
+
+func matchVersion(cmdOut *[]byte) error {
+	pattern := regexp.MustCompile(`.*version\: +v(\d.\d.\d).*commit\: +(.*)`)
+	matches := pattern.FindStringSubmatch(string(*cmdOut))
+
+	fmt.Println(matches)
+
+	if l := len(matches); l != 2+1 {
+		return fmt.Errorf("expected three matches, received %d instead", l)
+	}
+
+	version := matches[1]
+	if len(version) == 0 {
+		return fmt.Errorf("expected operator-sdk version number, got: %v", version)
+	}
+
+	outdated, err := outdatedVersion(version)
+	if err != nil {
+		return err
+	}
+	if outdated {
+		return fmt.Errorf("operator-sdk version is outdated")
+	}
+
+	return nil
+
+}
+
+func outdatedVersion(version string) (bool, error) {
+
+	pattern := regexp.MustCompile(`^(\d)\.(\d)\.(\d)$`)
+	matches := pattern.FindStringSubmatch(version)
+
+	if l := len(matches); l != 3+1 {
+		return true, fmt.Errorf("expected four matches, received %d instead", l)
+	}
+
+	first := matches[1]
+	second := matches[2]
+
+	if len(first) == 0 || len(second) == 0 {
+		return true, fmt.Errorf("error parsing version number: %v", version)
+	}
+
+	firstInt, err := strconv.Atoi(first)
+	if err != nil {
+		return true, err
+	}
+	secondInt, err := strconv.Atoi(second)
+	if err != nil {
+		return true, err
+	}
+
+	if firstInt == 0 {
+		if secondInt < 8 {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }

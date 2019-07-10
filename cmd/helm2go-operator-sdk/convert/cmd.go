@@ -60,6 +60,11 @@ func convertFunc(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if err := verifyOperatorSDKVersion(); err != nil {
+		log.Error(err)
+		return err
+	}
+
 	log.Infof("🤠 Converting Existing Helm Chart %s to Go Operator %s!", helmChartRef, outputDir)
 
 	// load the spcecified helm chart
