@@ -7,6 +7,7 @@ import (
 
 // takes a map of injected files and writes them to a temp directory
 func writeToTemp(files map[string]string, outParentDir string) (string, error) {
+	os.RemoveAll(filepath.Join(outParentDir, "temp"))
 	err := os.Mkdir(filepath.Join(outParentDir, "temp"), 0700)
 	if err != nil {
 		return "", err

@@ -41,3 +41,6 @@ To create an operator from an *external* helm chart:
 ```
 go run main.go convert <OperatorName> --helm-chart-repo=https://charts.example.io/ --helm-chart=example-chart --kind=Kind --api-version=apps.example.com/v1alpha1
 ```
+
+## Common Problems
+If you are experiencing build errors: `go: error loading module requirements`, execute the following command `export GO111MODULES=off` within the operator folder.
