@@ -82,16 +82,20 @@ func yamlUnmarshalSingleResource(rp string) (resourceConfig, error) {
 
 func yamlUnmarshalSingleResourceFromBytes(fileBytes []byte) (resourceConfig, error) {
 
-	// instantiate decoder for decoding purposes
+	// // instantiate decoder for decoding purposes
+	// baseScheme := scheme.Scheme
+	// baseScheme.AddKnownTypes(networkingv1beta1.SchemeGroupVersion, &networkingv1beta1.Ingress{})
+	// // if baseScheme.IsVersionRegistered(networkingv1beta1.SchemeGroupVersion) {
+	// // 	return resourceConfig{}, fmt.Errorf("was not registered")
+	// // }
 	decode := scheme.Codecs.UniversalDeserializer().Decode
-
 	if isEmptyFile(fileBytes) {
 		return resourceConfig{}, fmt.Errorf("empty")
 	}
 
 	obj, _, err := decode([]byte(fileBytes), nil, nil)
 	if err != nil {
-		return resourceConfig{}, err
+		return resourceConfig{}, fmt.Errorf("error decoding bytes: %v", err)
 	}
 
 	// verify that the decoded resource kind is supported

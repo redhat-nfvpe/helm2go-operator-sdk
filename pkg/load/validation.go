@@ -21,7 +21,7 @@ func PerformResourceValidation(rp string) (*validatemap.ValidateMap, error) {
 	// collect all templated files in directory
 	files, err := ioutil.ReadDir(rp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error reading files in directory %s: %v", rp, err)
 	}
 
 	var validMap validatemap.ValidateMap
@@ -55,7 +55,7 @@ func PerformResourceValidation(rp string) (*validatemap.ValidateMap, error) {
 			} else if e == "not yaml" || e == "empty" {
 				continue
 			} else {
-				return nil, err
+				return nil, fmt.Errorf("uncaught error: %v", err)
 			}
 		}
 	}

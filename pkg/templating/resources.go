@@ -1,8 +1,11 @@
 package templating
 
 import (
+	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/iancoleman/strcase"
@@ -80,6 +83,7 @@ var ResourceTitles = map[string]string{
 
 var controllerKindImports = map[string]string{
 	"k8s.io/api/core/v1":                                           "corev1",
+	"k8s.io/api/apps/v1":                                           "appsv1",
 	"k8s.io/apimachinery/pkg/api/errors":                           "",
 	"k8s.io/apimachinery/pkg/apis/meta/v1":                         "metav1",
 	"k8s.io/apimachinery/pkg/runtime":                              "",
@@ -124,24 +128,49 @@ func kindToLowerCamel(kind string) string {
 }
 
 func getOwnerAPIVersion(apiVersion, kind string) string {
-	return filepath.Base(apiVersion) + kindToLowerCamel(kind)
+	return kindToLowerCamel(kind) + filepath.Base(apiVersion)
 }
 
 func getImportMap(outputDir, kind, apiVersion string) map[string]string {
-	controllerKindImports[getAppTypeImport(outputDir, apiVersion)] = getAppTypeImportAbbreviation(kind, apiVersion)
+
+	controllerKindImports[getAppTypeImport(outputDir, apiVersion)] = getOwnerAPIVersion(apiVersion, kind)
 	return controllerKindImports
 }
 
 func getAppTypeImport(outputDir, apiVersion string) string {
-	// append the correct path
-	// everything after source is in the correct path
-	sp := strings.Split(outputDir, "src/")
-	base := sp[len(sp)-1]
-	result := filepath.Join(base, "pkg", "apis", "apps", apiVersion)
-	return result
+	comps, err := getAPIVersionComponents(apiVersion)
+	if err != nil {
+		panic(err)
+	}
+
+	cwd, _ := os.Getwd()
+	cwd = filepath.Join(cwd, outputDir)
+
+	sp := strings.Split(cwd, "src/")
+	comps = append([]string{sp[len(sp)-1], "pkg", "apis"}, comps...)
+
+	return filepath.Join(comps...)
+
 }
 
-func getAppTypeImportAbbreviation(kind, apiVersion string) string {
-	result := apiVersion + kind
-	return result
+func getAPIVersionComponents(input string) ([]string, error) {
+
+	var group string
+	var version string
+
+	// matches the input string and returns the groups
+	pattern := regexp.MustCompile(`(.*)\.(.*)\..*\/(.*)`)
+	matches := pattern.FindStringSubmatch(input)
+	if l := len(matches); l != 3+1 {
+		return []string{}, fmt.Errorf("expected four matches, received %d instead", l)
+	}
+	group = matches[1]
+	version = matches[3]
+
+	var result = []string{
+		group,
+		version,
+	}
+
+	return result, nil
 }

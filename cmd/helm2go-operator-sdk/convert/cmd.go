@@ -20,7 +20,7 @@ func NewConvertCmd() *cobra.Command {
 	newCmd.Flags().StringVar(&helmChartVersion, "helm-chart-version", "", "Specific version of the helm chart (default is latest version)")
 	newCmd.Flags().StringVar(&helmChartRepo, "helm-chart-repo", "", "Chart repository URL for the requested helm chart")
 	newCmd.Flags().StringVar(&username, "username", "", "Username for chart repo")
-	newCmd.Flags().StringVar(&username, "password", "", "Password for chart repo")
+	newCmd.Flags().StringVar(&password, "password", "", "Password for chart repo")
 	newCmd.Flags().StringVar(&helmChartCertFile, "helm-chart-cert-file", "", "Cert File For External Repo")
 	newCmd.Flags().StringVar(&helmChartKeyFile, "helm-chart-key-file", "", "Key File For External Repo")
 	newCmd.Flags().StringVar(&helmChartCAFile, "helm-chart-ca-file", "", "CA File For External Repo")
@@ -52,16 +52,16 @@ var (
 
 func convertFunc(cmd *cobra.Command, args []string) error {
 	if err := parse(args); err != nil {
-		log.Error(err)
+		log.Error("error parsing arguments: ", err)
 		return err
 	}
 	if err := verifyFlags(); err != nil {
-		log.Error(err)
+		log.Error("error verifying flags: ", err)
 		return err
 	}
 
 	if err := verifyOperatorSDKVersion(); err != nil {
-		log.Error(err)
+		log.Error("error verifying operator-sdk version: ", err)
 		return err
 	}
 
@@ -70,26 +70,26 @@ func convertFunc(cmd *cobra.Command, args []string) error {
 	// load the spcecified helm chart
 	err := loadChart()
 	if err != nil {
-		log.Error(err)
+		log.Error("error loading chart: ", err)
 		return err
 	}
 
 	rcache, err := doHelmGoConversion()
 	if err != nil {
-		log.Error(err)
+		log.Error("error performing chart conversion: ", err)
 		return err
 	}
 
 	//create the operator-sdk scaffold
 	_, err = doGoScaffold()
 	if err != nil {
-		log.Error(err)
+		log.Error("error generating scaffolding: ", err)
 		return err
 	}
 
 	err = scaffoldOverwrite(outputDir, kind, apiVersion, rcache)
 	if err != nil {
-		log.Error(err)
+		log.Error("error overwritting scaffold: ", err)
 		return err
 	}
 

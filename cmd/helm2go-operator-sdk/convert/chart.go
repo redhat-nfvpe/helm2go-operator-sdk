@@ -88,27 +88,27 @@ func doHelmGoConversion() (*resourcecache.ResourceCache, error) {
 	// render the helm charts
 	f, err := render.InjectTemplateValues(c)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error injecting template values: %v", err)
 	}
 	// write the rendered charts to output directory
 	d, _ := os.Getwd()
 	temp, err := render.InjectedToTemp(f, d)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error injecting template values: %v", err)
 	}
 
 	to := filepath.Join(temp, chartName, "templates")
 
-	// perform version validation
+	// perform resource validation
 	validMap, err := load.PerformResourceValidation(to)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error performing resource validation: %v", err)
 	}
 
 	// convert the helm templates to go structures
 	rcache, err := load.YAMLUnmarshalResources(to, validMap, resourcecache.NewResourceCache())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error performing yaml unmarshaling: %v", err)
 	}
 
 	// clean up temp folder
