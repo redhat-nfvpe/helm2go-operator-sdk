@@ -1,4 +1,10 @@
-/vendor/**/.git
+# Folders
+
+_obj
+_test
+_output
+.kube
+.idea
 # Binaries for programs and plugins
 *.exe
 *.exe~
