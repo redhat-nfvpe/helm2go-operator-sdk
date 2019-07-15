@@ -9,31 +9,49 @@ import (
 //KindType ...
 type KindType string
 
+func (k *KindType) String() string {
+	return string(*k)
+}
+
 //PackageType ...
 type PackageType string
 
+func (p *PackageType) String() string {
+	return string(*p)
+}
+
 //const for packagename types
 const (
-	PackageTypeRoles       PackageType = "roles"
-	PackageTypeDeployments             = "deployments"
-	PackageTypeContainers              = "containers"
-	PackageTypePods                    = "pods"
-	PackageTypeSecrets                 = "secrets"
-	PackageTypeDaemonSet               = "daemonset"
-	PackageTypeVolumes                 = "volumes"
-	PackageTypeConfigMaps              = "configmaps"
+	PackageTypeRoles               PackageType = "roles"
+	PackageTypeClusterRoles                    = "clusterroles"
+	PackageTypeDeployments                     = "deployments"
+	PackageTypeContainers                      = "containers"
+	PackageTypePods                            = "pods"
+	PackageTypeSecrets                         = "secrets"
+	PackageTypeDaemonSet                       = "daemonset"
+	PackageTypeVolumes                         = "volumes"
+	PackageTypeConfigMaps                      = "configmaps"
+	PackageTypeServices                        = "services"
+	PackageTypeRoleBindings                    = "rolebindings"
+	PackageTypeClusterRoleBindings             = "clusterrolebindings"
+	PackageTypeServiceAccounts                 = "serviceaccounts"
 )
 
 //const for KindType
 const (
-	KindTypeConfigMap  KindType = "ConfigMap"
-	KindTypeDeployment          = "Deployment"
-	KindTypeRole                = "Role"
-	KindTypeSecret              = "Secret"
-	KindTypeVolume              = "Volume"
-	KindTypeDaemonSet           = "DaemonSet"
-	KindTypePod                 = "Pod"
-	KindTypeContainer           = "Container"
+	KindTypeConfigMap          KindType = "ConfigMap"
+	KindTypeDeployment                  = "Deployment"
+	KindTypeRole                        = "Role"
+	KindTypeClusterRole                 = "ClusterRole"
+	KindTypeSecret                      = "Secret"
+	KindTypeVolume                      = "Volume"
+	KindTypeDaemonSet                   = "DaemonSet"
+	KindTypePod                         = "Pod"
+	KindTypeContainer                   = "Container"
+	KindTypeService                     = "Service"
+	KindTypeRoleBinding                 = "RoleBinding"
+	KindTypeClusterRoleBinding          = "ClusterRoleBinding"
+	KindTypeServiceAccount              = "ServiceAccount"
 )
 
 /*
@@ -62,6 +80,11 @@ func NewResourceCache() *ResourceCache {
 	return &ResourceCache{
 		cache: make(map[KindType]*Resource),
 	}
+}
+
+// GetCache returns the main cache object
+func (r *ResourceCache) GetCache() *map[KindType]*Resource {
+	return &r.cache
 }
 
 //Size  cache items
@@ -105,6 +128,31 @@ func (r *ResourceCache) SetResourceForKindType(kind KindType, packageType Packag
 //GetResourceForKindType ...
 func (r *ResourceCache) GetResourceForKindType(kind KindType) *Resource {
 	return r.cache[kind]
+}
+
+//PrepareCacheForFile formats the cache for the file write operation
+func (r *ResourceCache) PrepareCacheForFile() map[string]*Resource {
+	c := *r.GetCache()
+	var newKey string
+	var newMap map[string]*Resource
+	newMap = make(map[string]*Resource)
+	for rtype := range c {
+		// reset the key to be a filename
+		newKey = nameToFileName(rtype.String(), FileExtensionGo)
+		newMap[newKey] = c[rtype]
+	}
+	return newMap
+}
+
+//GetKindTypes returns a list of kind types in use by the cache
+func (r *ResourceCache) GetKindTypes() []KindType {
+	kts := make([]KindType, len(r.cache))
+	i := 0
+	for kt := range r.cache {
+		kts[i] = kt
+		i++
+	}
+	return kts
 }
 
 //GetResourceFunctions ...

@@ -1,3 +1,10 @@
+# Folders
+
+_obj
+_test
+_output
+.kube
+.idea
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -5,8 +12,19 @@
 *.so
 *.dylib
 
+
+nginx-operator/
 # Test binary, build with `go test -c`
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+
+## Testing Purposes Only
+test/drone/
+test/bitcoind/
+test/tomcat/
+temp/
+test-operator/
+helm2go-operator-sdk

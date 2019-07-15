@@ -1,0 +1,21 @@
+package {{ .PackageName }}
+
+import (
+    {{range $index, $statement := .ImportStatements}}
+        {{ $statement }}
+    {{ end }}
+)
+
+// New{{ .ResourceName }}ForCR ...
+func New{{ .ResourceName }}ForCR(r *{{.APIVersion}}.{{ .Kind }}) {{ .ResourceType }}{
+    var e {{ .ResourceType }}
+    elemYaml := `
+    {{ .ResourceJSON }}
+    `
+    // Unmarshal Specified JSON to Kubernetes Resource
+    err := json.Unmarshal([]byte(elemYaml), e)
+    if err != nil {
+        panic(err)
+    }
+    return e
+}
