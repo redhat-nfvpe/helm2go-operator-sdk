@@ -2,6 +2,7 @@ package convert
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"testing"
@@ -143,29 +144,40 @@ func createInvalidKindName() *cobra.Command {
 
 func TestCommandArgumentValidation(t *testing.T) {
 	var err error
+	log.Println("Executing No Operator Name Test")
 	if err = createInvalidCommand().Execute(); err == nil {
 		t.Logf("Error: %v", err)
 		os.RemoveAll("./test-operator")
 		t.Fatal("Expected Error! Command Has No Operator Name Argument.")
 	}
+	log.Println("Executing No Operator Name (empty) Test")
 	if err = createInvalidOperatorName().Execute(); err == nil {
 		t.Logf("Error: %v", err)
 		os.RemoveAll("./test-operator")
 		t.Fatal("Expected Error! Command Has Invalid(empty) Operator Name Argument.")
 	}
+	log.Println("Executing Invalid API Version Test")
 	if err = createInvalidKindName().Execute(); err == nil {
 		t.Logf("Error: %v", err)
 		os.RemoveAll("./test-operator")
 		t.Fatal("Expected Error! Command Has Invalid(Has Space) API Version Argument.")
 	}
+	log.Println("Executing Valid Operator Test")
 	if err = createValidCommand().Execute(); err != nil {
 		t.Logf("Error: %v", err)
 		os.RemoveAll("./test-operator")
 		t.Fatal("Unexpected Error! Provided Correct Arguments and Flags.")
 	}
 
+	testOperatorPath, err := filepath.Abs("./test-operator")
+	if err != nil {
+		t.Fatalf("unexpected error evaluating path: %v", err)
+	}
+	tomcatPath, err := filepath.Abs("./tomcat")
 	// clean up
-	os.RemoveAll("./test-operator")
+	os.RemoveAll(testOperatorPath)
+	// clean up
+	os.RemoveAll(tomcatPath)
 }
 
 func TestHelmChartDownload(t *testing.T) {

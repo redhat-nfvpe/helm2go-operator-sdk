@@ -171,7 +171,7 @@ func OverwriteController(outputDir, kind, apiVersion string, rcache *resourcecac
 	// TODO I call this twice; I can probably merge the functions
 	for _, r := range rcache.PrepareCacheForFile() {
 		wr = bytes.Buffer{}
-		temp, err = template.New("controllerFunc.tmpl").ParseFiles(filepath.Join(cwd, "pkg", "templating", "controllerFunc.tmpl"))
+		temp, err = template.New("controllerFunc.tmpl").ParseFiles(filepath.Join(cwd, "controllerFunc.tmpl"))
 		if err != nil {
 			log.Println(err)
 			return false
@@ -197,7 +197,7 @@ func OverwriteController(outputDir, kind, apiVersion string, rcache *resourcecac
 		watchFuncs = append(watchFuncs, wr.String())
 	}
 	wr = bytes.Buffer{}
-	temp, err = template.New("controller.tmpl").ParseFiles(filepath.Join(cwd, "pkg", "templating", "controller.tmpl"))
+	temp, err = template.New("controllerFunc.tmpl").ParseFiles(filepath.Join(cwd, "pkg", "templating", "controllerFunc.tmpl"))
 	c = ControllerTemplateConfig{
 		kind,
 		lowerKind,
