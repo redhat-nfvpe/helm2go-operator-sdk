@@ -120,7 +120,7 @@ func scaffoldOverwrite(outputDir, kind, apiVersion string, rcache *resourcecache
 
 	ok := templating.OverwriteController(outputDir, kind, apiVersion, rcache)
 	if !ok {
-		fmt.Println(ok)
+		return fmt.Errorf("error when overwriting with template")
 	}
 	// create templates for writing to file
 	templates := templating.CacheTemplating(rcache, kind, apiVersion)
