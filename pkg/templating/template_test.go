@@ -81,7 +81,7 @@ func TestGetImport(t *testing.T) {
 
 	outputDir = "/home/sjakati/go/src/github.com/redhat-nfvpe/helm2go-operator-sdk/nginx-operator"
 	apiVersion = "web.example.com/v1alpha1"
-	expected = "github.com/redhat-nfvpe/helm2go-operator-sdk/nginx-operator/web/example/v1alpha1"
+	expected = "github.com/redhat-nfvpe/helm2go-operator-sdk/nginx-operator/pkg/apis/web/v1alpha1"
 	result = getAppTypeImport(outputDir, apiVersion)
 	if result != expected {
 		t.Fatalf("expected %s got %s", expected, result)
