@@ -7,13 +7,16 @@ import (
 	"path/filepath"
 )
 
-func doGoScaffold() (string, error) {
+func doGoScaffold() error {
+	if mock {
+		return nil
+	}
 	// calls the operator-sdk with the correct command line arguments
 	cmd := getScaffoldCommand()
 	err := cmd.Run()
 	if err != nil {
 		fmt.Println("Error While Building Scaffold")
-		return "", err
+		return err
 	}
 
 	// add the api
@@ -21,7 +24,7 @@ func doGoScaffold() (string, error) {
 	err = cmd.Run()
 	if err != nil {
 		fmt.Println("Error While Adding API")
-		return "", err
+		return err
 	}
 
 	// add the controller
@@ -29,15 +32,15 @@ func doGoScaffold() (string, error) {
 	err = cmd.Run()
 	if err != nil {
 		fmt.Println("Error While Adding Controller")
-		return "", err
+		return err
 	}
 	// returns the output scaffold directory
-	return "", nil
+	return nil
 }
 
 // getScaffoldCommand returns the correct command to build the operator-sdk scaffold
 func getScaffoldCommand() *exec.Cmd {
-	scaffoldCommand := exec.Command("operator-sdk", "new", outputDir, "--dep-manager", "dep")
+	scaffoldCommand := exec.Command("operator-sdk", "new", operatorName, "--dep-manager", "dep")
 	scaffoldCommand.Dir = filepath.Dir(outputDir)
 	scaffoldCommand.Stdout = os.Stdout
 	scaffoldCommand.Stderr = os.Stderr

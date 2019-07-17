@@ -7,26 +7,57 @@ import (
 	"os"
 	"path/filepath"
 
-	"k8s.io/helm/pkg/repo"
-
-	"k8s.io/helm/pkg/getter"
-	"k8s.io/helm/pkg/helm/environment"
-	"k8s.io/helm/pkg/helm/helmpath"
-
+	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/pathconfig"
 	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/resourcecache"
 	"github.com/redhat-nfvpe/helm2go-operator-sdk/pkg/load"
 	"github.com/redhat-nfvpe/helm2go-operator-sdk/pkg/render"
 	"github.com/redhat-nfvpe/helm2go-operator-sdk/pkg/templating"
-
 	"k8s.io/helm/pkg/chartutil"
 	"k8s.io/helm/pkg/downloader"
+	"k8s.io/helm/pkg/getter"
+	"k8s.io/helm/pkg/helm/environment"
+	"k8s.io/helm/pkg/helm/helmpath"
+	"k8s.io/helm/pkg/proto/hapi/chart"
+	"k8s.io/helm/pkg/repo"
 )
 
-func loadChart() error {
-	// if repo is specified
+//HelmChartClient ....
+type HelmChartClient struct {
+	HelmChartRef      string
+	HelmChartRepo     string
+	HelmChartVersion  string
+	HelmChartCAFile   string
+	HelmChartCertFile string
+	HelmChartKeyFile  string
+	Username          string
+	Password          string
+	Chart             *chart.Chart
+	ChartName         string
+	PathConfig        *pathconfig.PathConfig
+}
+
+//NewChartClient creates a new chart client
+func NewChartClient() *HelmChartClient {
+	return &HelmChartClient{}
+}
+
+// SetValues ingests alle the necessary values for the client
+func (hc *HelmChartClient) SetValues(helmChartRef, helmChartVersion, helmChartRepo, username, password, helmChartCAFile, helmChartCertFile, helmChartKeyFile string) {
+	hc.HelmChartRef = helmChartRef
+	hc.HelmChartVersion = helmChartVersion
+	hc.HelmChartRepo = helmChartRepo
+	hc.Username = username
+	hc.Password = password
+	hc.HelmChartCAFile = helmChartCAFile
+	hc.HelmChartCertFile = helmChartCertFile
+	hc.HelmChartKeyFile = helmChartKeyFile
+}
+
+//LoadChart ...
+func (hc *HelmChartClient) LoadChart() error {
 	var chartPath string
-	chartPath = helmChartRef
-	if len(helmChartRepo) > 0 {
+	chartPath = hc.HelmChartRef
+	if len(hc.HelmChartRepo) > 0 {
 
 		var out io.Writer
 		home, err := os.UserHomeDir()
@@ -39,65 +70,56 @@ func loadChart() error {
 			Keyring:  "",
 			HelmHome: helmpath.Home(filepath.Join(home, ".helm")),
 			Getters:  getter.All(environment.EnvSettings{}),
-			Username: username,
-			Password: password,
+			Username: hc.Username,
+			Password: hc.Password,
 		}
 
-		chartURL, err := repo.FindChartInAuthRepoURL(helmChartRepo, username, password, chartPath, helmChartVersion, helmChartCertFile, helmChartKeyFile, helmChartCAFile, getter.All(environment.EnvSettings{}))
+		chartURL, err := repo.FindChartInAuthRepoURL(hc.HelmChartRepo, hc.Username, hc.Password, chartPath, hc.HelmChartVersion, hc.HelmChartCertFile, hc.HelmChartKeyFile, hc.HelmChartCAFile, getter.All(environment.EnvSettings{}))
 		if err != nil {
 			return err
 		}
 
-		helmChartRef = chartURL
-		cwd, _ := os.Getwd()
+		hc.HelmChartRef = chartURL
 
-		downloaded, _, err := d.DownloadTo(helmChartRef, helmChartVersion, cwd)
+		downloaded, _, err := d.DownloadTo(hc.HelmChartRef, hc.HelmChartVersion, hc.PathConfig.GetBasePath())
 		if err != nil {
 			log.Printf("Errored here")
 			return err
 		}
 
-		ud := chartName
-		if !filepath.IsAbs(ud) {
-			ud = filepath.Join(cwd, ud)
-		}
-		if fi, err := os.Stat(ud); err != nil {
-			if err := os.MkdirAll(ud, 0755); err != nil {
-				return fmt.Errorf("Failed to untar (mkdir): %s", err)
-			}
-
-		} else if !fi.IsDir() {
-			return fmt.Errorf("Failed to untar: %s is not a directory", ud)
-		}
-
-		chartutil.ExpandFile(ud, downloaded)
+		chartutil.ExpandFile(hc.PathConfig.GetBasePath(), downloaded)
 		os.RemoveAll(downloaded)
-		log.Printf("Downloaded Chart To: %v\n", ud)
-		chartPath = filepath.Join(ud, chartPath)
+		log.Printf("Downloaded Chart To: %v\n", hc.PathConfig.GetBasePath())
+		chartPath = filepath.Join(hc.PathConfig.GetBasePath(), chartPath)
 	}
 
-	c, _ = chartutil.Load(chartPath)
-	chartName = c.Metadata.GetName()
+	loadedChart, err := chartutil.Load(chartPath)
+	if err != nil {
+		return err
+	}
+	hc.Chart = loadedChart
+	hc.ChartName = hc.Chart.Metadata.GetName()
 
 	return nil
 }
 
-// doHelmGoConversion takes a chart, injects all necessary values, and returns a cache of the converted Go structs
-func doHelmGoConversion() (*resourcecache.ResourceCache, error) {
+// DoHelmGoConversion takes a chart, injects all necessary values, and returns a cache of the converted Go structs
+func (hc *HelmChartClient) DoHelmGoConversion() (*resourcecache.ResourceCache, error) {
 
 	// render the helm charts
-	f, err := render.InjectTemplateValues(c)
+	f, err := render.InjectTemplateValues(hc.Chart)
 	if err != nil {
 		return nil, fmt.Errorf("error injecting template values: %v", err)
 	}
 	// write the rendered charts to output directory
-	d, _ := os.Getwd()
+	d := hc.PathConfig.GetBasePath()
+	fmt.Printf("PATH CONFIG BASE: %s\n", d)
 	temp, err := render.InjectedToTemp(f, d)
 	if err != nil {
-		return nil, fmt.Errorf("error injecting template values: %v", err)
+		return nil, fmt.Errorf("error writing template values to temp files: %v", err)
 	}
 
-	to := filepath.Join(temp, chartName, "templates")
+	to := filepath.Join(temp, hc.ChartName, "templates")
 
 	// perform resource validation
 	validMap, err := load.PerformResourceValidation(to)

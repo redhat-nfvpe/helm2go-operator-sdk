@@ -1,28 +1,36 @@
 language: go
 
 
-matrix:
-  include:
-  - go: "1.10.x"
-    script:  
-      - go test -v ./...  -covermode=count -coverprofile=coverage.out
-      - $HOME/gopath/bin/goveralls  -coverprofile=coverage.out -service=travis-ci
-  - go: "1.11.x"
-    script: 
-      - go test -v -mod=vendor ./...  -covermode=count -coverprofile=coverage.out
-      - $HOME/gopath/bin/goveralls  -coverprofile=coverage.out -service=travis-ci
-  - go: "1.12.x"
-    script: 
-      - go test -v -mod=vendor ./... -covermode=count -coverprofile=coverage.out
-      - $HOME/gopath/bin/goveralls  -coverprofile=coverage.out -service=travis-ci
-
+go: "1.12.x"
 env:
-  - GO111MODULE=on
+  global
+    - GO111MODULE=on
+    - DEP_VERSION=0.5.1
+
+script: 
+- go test -v -mod=vendor ./... -covermode=count -coverprofile=coverage.out
+- $HOME/gopath/bin/goveralls  -coverprofile=coverage.out -service=travis-ci
+
 
 install: true
+
+sudo: required
+
+before_script:
+  - export RELEASE_VERSION=v0.9.0
+  - curl -OJL https://github.com/operator-framework/operator-sdk/releases/download/${RELEASE_VERSION}/operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu
+  - chmod +x operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu && sudo cp operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu /usr/local/bin/operator-sdk && rm operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu
+  - wget https://storage.googleapis.com/kubernetes-helm/helm-v2.10.0-linux-amd64.tar.gz 
+  - tar -xvzf helm-v2.10.0-linux-amd64.tar.gz
+  - sudo mv linux-amd64/helm /usr/local/bin/helm
+  - helm init --client-only
 
 before_install:
   - go get golang.org/x/lint/golint
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/mattn/goveralls
+  - curl -L -s https://github.com/golang/dep/releases/download/v${DEP_VERSION}/dep-linux-amd64 -o $GOPATH/bin/dep
+  - chmod +x $GOPATH/bin/dep
 
+  
+  

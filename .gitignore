@@ -24,7 +24,7 @@ nginx-operator/
 ## Testing Purposes Only
 test/drone/
 test/bitcoind/
-test/tomcat/
+
 temp/
 test-operator/
 helm2go-operator-sdk

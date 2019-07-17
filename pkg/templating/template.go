@@ -90,8 +90,7 @@ func ResourceObjectToGoResourceFile(resource interface{}) (string, error) {
 
 func configDeclarationTemplate(c TemplateConfig) (string, error) {
 
-	cwd, err := os.Getwd()
-	temp, err := template.New("resourceFunc.tmpl").ParseFiles(filepath.Join(cwd, "pkg", "templating", "resourceFunc.tmpl"))
+	temp, err := template.New("resourceFuncTemplate").Parse(getResourceTemplate())
 	if err != nil {
 		return "", err
 	}
@@ -162,16 +161,9 @@ func OverwriteController(outputDir, kind, apiVersion string, rcache *resourcecac
 	ownerAPIVersion := getOwnerAPIVersion(apiVersion, kind)
 	lowerKind := kindToLowerCamel(kind)
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-
-	// TODO I call this twice; I can probably merge the functions
 	for _, r := range rcache.PrepareCacheForFile() {
 		wr = bytes.Buffer{}
-		temp, err = template.New("controllerFunc.tmpl").ParseFiles(filepath.Join(cwd, "pkg", "templating", "controllerFunc.tmpl"))
+		temp, err = template.New("controllerFuncTemplate").Parse(getControllerFunctionTemplate())
 		if err != nil {
 			log.Println(err)
 			return false
@@ -197,7 +189,7 @@ func OverwriteController(outputDir, kind, apiVersion string, rcache *resourcecac
 		watchFuncs = append(watchFuncs, wr.String())
 	}
 	wr = bytes.Buffer{}
-	temp, err = template.New("controller.tmpl").ParseFiles(filepath.Join(cwd, "pkg", "templating", "controller.tmpl"))
+	temp, err = template.New("controllerTemplate").Parse(getControllerTemplate())
 	c = ControllerTemplateConfig{
 		kind,
 		lowerKind,
@@ -205,6 +197,7 @@ func OverwriteController(outputDir, kind, apiVersion string, rcache *resourcecac
 		getImportMap(outputDir, kind, apiVersion),
 		watchFuncs,
 	}
+
 	err = temp.Execute(&wr, c)
 	if err != nil {
 		log.Println(err)
