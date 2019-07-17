@@ -37,7 +37,7 @@ func doGoScaffold() (string, error) {
 
 // getScaffoldCommand returns the correct command to build the operator-sdk scaffold
 func getScaffoldCommand() *exec.Cmd {
-	scaffoldCommand := exec.Command("operator-sdk", "new", outputDir, "--dep-manager", "dep")
+	scaffoldCommand := exec.Command("operator-sdk", "new", operatorName, "--dep-manager", "dep")
 	scaffoldCommand.Dir = filepath.Dir(outputDir)
 	scaffoldCommand.Stdout = os.Stdout
 	scaffoldCommand.Stderr = os.Stderr

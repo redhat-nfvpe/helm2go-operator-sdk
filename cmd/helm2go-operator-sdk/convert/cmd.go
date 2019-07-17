@@ -1,8 +1,11 @@
 package convert
 
 import (
+	"path/filepath"
+
 	"k8s.io/helm/pkg/proto/hapi/chart"
 
+	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/pathconfig"
 	"github.com/spf13/cobra"
 	"github.com/tav/golly/log"
 )
@@ -43,14 +46,19 @@ var (
 	kind              string
 	clusterScoped     bool
 	outputDir         string
+	operatorName      string
 )
 
 var (
-	c         *chart.Chart
-	chartName string
+	c          *chart.Chart
+	chartName  string
+	pathConfig *pathconfig.PathConfig
 )
 
 func convertFunc(cmd *cobra.Command, args []string) error {
+
+	setBasePathConfig()
+
 	if err := parse(args); err != nil {
 		log.Error("error parsing arguments: ", err)
 		return err
@@ -65,7 +73,7 @@ func convertFunc(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	log.Infof("🤠 Converting Existing Helm Chart %s to Go Operator %s!", helmChartRef, outputDir)
+	log.Infof("🤠 Converting Existing Helm Chart %s to Go Operator %s!", helmChartRef, operatorName)
 
 	// load the spcecified helm chart
 	err := loadChart()
@@ -79,6 +87,8 @@ func convertFunc(cmd *cobra.Command, args []string) error {
 		log.Error("error performing chart conversion: ", err)
 		return err
 	}
+
+	outputDir = filepath.Join(pathConfig.GetBasePath(), operatorName)
 
 	//create the operator-sdk scaffold
 	_, err = doGoScaffold()

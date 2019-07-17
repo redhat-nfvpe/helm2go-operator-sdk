@@ -49,9 +49,8 @@ func loadChart() error {
 		}
 
 		helmChartRef = chartURL
-		cwd, _ := os.Getwd()
 
-		downloaded, _, err := d.DownloadTo(helmChartRef, helmChartVersion, cwd)
+		downloaded, _, err := d.DownloadTo(helmChartRef, helmChartVersion, pathConfig.GetBasePath())
 		if err != nil {
 			log.Printf("Errored here")
 			return err
@@ -59,7 +58,7 @@ func loadChart() error {
 
 		ud := chartName
 		if !filepath.IsAbs(ud) {
-			ud = filepath.Join(cwd, ud)
+			ud = filepath.Join(pathConfig.GetBasePath(), ud)
 		}
 		if fi, err := os.Stat(ud); err != nil {
 			if err := os.MkdirAll(ud, 0755); err != nil {
@@ -91,10 +90,11 @@ func doHelmGoConversion() (*resourcecache.ResourceCache, error) {
 		return nil, fmt.Errorf("error injecting template values: %v", err)
 	}
 	// write the rendered charts to output directory
-	d, _ := os.Getwd()
+	d := pathConfig.GetBasePath()
+	fmt.Printf("PATH CONFIG BASE: %s\n", d)
 	temp, err := render.InjectedToTemp(f, d)
 	if err != nil {
-		return nil, fmt.Errorf("error injecting template values: %v", err)
+		return nil, fmt.Errorf("error writing template values to temp files: %v", err)
 	}
 
 	to := filepath.Join(temp, chartName, "templates")
