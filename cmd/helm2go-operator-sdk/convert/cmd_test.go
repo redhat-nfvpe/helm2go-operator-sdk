@@ -80,14 +80,15 @@ func createValidCommand() *cobra.Command {
 	var cmd *cobra.Command
 	cmd = NewConvertCmd()
 
-	tomcatDir := "/home/sjakati/go/src/github.com/redhat-nfvpe/helm2go-operator-sdk/test/tomcat"
+	gopathDir := os.Getenv("GOPATH")
+	nginxDir := filepath.Join(gopathDir, "src/github.com/redhat-nfvpe/helm2go-operator-sdk/test/nginx")
 
 	// command has an operator name and correct flags
 	cmd.SetArgs([]string{
 		"test-operator",
-		fmt.Sprintf("--helm-chart=%s", tomcatDir),
+		fmt.Sprintf("--helm-chart=%s", nginxDir),
 		fmt.Sprintf("--api-version=%s", "app.example.com/v1alpha1"),
-		fmt.Sprintf("--kind=%s", "Tomcat"),
+		fmt.Sprintf("--kind=%s", "Nginx"),
 	})
 	fmt.Println(cmd)
 	return cmd
@@ -98,13 +99,14 @@ func createInvalidCommand() *cobra.Command {
 	var cmd *cobra.Command
 	cmd = NewConvertCmd()
 
-	tomcatDir := "/home/sjakati/go/src/github.com/redhat-nfvpe/helm2go-operator-sdk/test/tomcat"
+	gopathDir := os.Getenv("GOPATH")
+	nginxDir := filepath.Join(gopathDir, "src/github.com/redhat-nfvpe/helm2go-operator-sdk/test/nginx")
 
 	// command does not have the operator name; invalid
 	cmd.SetArgs([]string{
-		fmt.Sprintf("--helm-chart=%s", tomcatDir),
+		fmt.Sprintf("--helm-chart=%s", nginxDir),
 		fmt.Sprintf("--api-version=%s", "app.example.com/v1alpha1"),
-		fmt.Sprintf("--kind=%s", "Tomcat"),
+		fmt.Sprintf("--kind=%s", "Ngnix"),
 	})
 	return cmd
 }
@@ -113,14 +115,15 @@ func createInvalidOperatorName() *cobra.Command {
 	var cmd *cobra.Command
 	cmd = NewConvertCmd()
 
-	tomcatDir := "/home/sjakati/go/src/github.com/redhat-nfvpe/helm2go-operator-sdk/test/tomcat"
+	gopathDir := os.Getenv("GOPATH")
+	nginxDir := filepath.Join(gopathDir, "src/github.com/redhat-nfvpe/helm2go-operator-sdk/test/nginx")
 
 	// command does not have the operator name; invalid
 	cmd.SetArgs([]string{
 		"",
-		fmt.Sprintf("--helm-chart=%s", tomcatDir),
+		fmt.Sprintf("--helm-chart=%s", nginxDir),
 		fmt.Sprintf("--api-version=%s", "app.example.com/v1alpha1"),
-		fmt.Sprintf("--kind=%s", "Tomcat"),
+		fmt.Sprintf("--kind=%s", "Ngnix"),
 	})
 	return cmd
 }
@@ -129,14 +132,15 @@ func createInvalidKindName() *cobra.Command {
 	var cmd *cobra.Command
 	cmd = NewConvertCmd()
 
-	tomcatDir := "/home/sjakati/go/src/github.com/redhat-nfvpe/helm2go-operator-sdk/test/tomcat"
+	gopathDir := os.Getenv("GOPATH")
+	nginxDir := filepath.Join(gopathDir, "src/github.com/redhat-nfvpe/helm2go-operator-sdk/test/nginx")
 
 	// command does not have the operator name; invalid
 	cmd.SetArgs([]string{
 		"test-operator",
-		fmt.Sprintf("--helm-chart=%s", tomcatDir),
+		fmt.Sprintf("--helm-chart=%s", nginxDir),
 		fmt.Sprintf("--api-version=%s", "app.example.com/v1alpha1 Server"),
-		fmt.Sprintf("--kind=%s", "Tomcat"),
+		fmt.Sprintf("--kind=%s", "Nginx"),
 	})
 	return cmd
 }

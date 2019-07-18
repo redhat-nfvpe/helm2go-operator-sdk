@@ -2,10 +2,13 @@ package convert
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/pathconfig"
 )
 
 func verifyFlags() error {
@@ -37,8 +40,8 @@ func parse(args []string) error {
 	if len(args) != 1 {
 		return fmt.Errorf("Please Specify Operator Name")
 	}
-	outputDir = args[0]
-	if len(outputDir) == 0 {
+	operatorName = args[0]
+	if len(operatorName) == 0 {
 		return fmt.Errorf("Project Name Must Not Be Empty")
 	}
 	return nil
@@ -133,4 +136,17 @@ func outdatedVersion(version string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func setBasePathConfig() error {
+	// get the current directory
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("error getting working directory")
+	}
+
+	basePath := cwd
+	pathConfig = pathconfig.NewConfig(basePath)
+
+	return nil
 }
