@@ -1,4 +1,4 @@
-package convert
+package newcmd
 
 import (
 	"path/filepath"
@@ -10,12 +10,12 @@ import (
 	"github.com/tav/golly/log"
 )
 
-// NewConvertCmd ...
-func NewConvertCmd() *cobra.Command {
+// NewCmd ...
+func NewCmd() *cobra.Command {
 	newCmd := &cobra.Command{
-		Use:   "convert <New Name>",
-		Short: "Converts an existing Helm Chart Operator into a Go Operator",
-		Long:  "Utilizes the Helm Rendering Engine and Operator-SDK to consumer an existing Helm Chart operator and then produces a Go Operator",
+		Use:   "new <New Name>",
+		Short: "Creates a Go Operator from an Existing Helm Chart",
+		Long:  "Utilizes the Helm Rendering Engine and Operator-SDK to consume an existing Helm Chart and produces a Go Operator",
 		RunE:  convertFunc,
 	}
 
