@@ -1,24 +1,16 @@
 language: go
 
 
-matrix:
-  include:
-  # - go: "1.10.x"
-  #   script:  
-  #     - go test -v ./...  -covermode=count -coverprofile=coverage.out
-  #     - $HOME/gopath/bin/goveralls  -coverprofile=coverage.out -service=travis-ci
-  # - go: "1.11.x"
-  #   script: 
-  #     - go test -v -mod=vendor ./...  -covermode=count -coverprofile=coverage.out
-  #     - $HOME/gopath/bin/goveralls  -coverprofile=coverage.out -service=travis-ci
-  - go: "1.12.x"
-    script: 
-      - go test -v -mod=vendor ./... -covermode=count -coverprofile=coverage.out
-      - $HOME/gopath/bin/goveralls  -coverprofile=coverage.out -service=travis-ci
-
+go: "1.12.x"
 env:
-  - GO111MODULE=on
-  - DEP_VERSION=0.5.1
+  global
+    - GO111MODULE=on
+    - DEP_VERSION=0.5.1
+
+script: 
+- go test -v -mod=vendor ./... -covermode=count -coverprofile=coverage.out
+- $HOME/gopath/bin/goveralls  -coverprofile=coverage.out -service=travis-ci
+
 
 install: true
 
