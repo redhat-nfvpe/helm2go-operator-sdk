@@ -27,4 +27,4 @@ test/bitcoind/
 
 temp/
 test-operator/
-/helm2go-operator-sdk
+helm2go-operator-sdk

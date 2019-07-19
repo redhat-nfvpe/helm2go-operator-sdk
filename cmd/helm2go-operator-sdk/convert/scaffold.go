@@ -1,4 +1,4 @@
-package newcmd
+package convert
 
 import (
 	"fmt"
