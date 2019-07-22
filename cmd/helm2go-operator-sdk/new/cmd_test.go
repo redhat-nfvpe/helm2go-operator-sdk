@@ -1,4 +1,4 @@
-package convert
+package new
 
 import (
 	"fmt"
@@ -115,7 +115,7 @@ func TestKindTypeValidation(t *testing.T) {
 //creates a command for use in the argument validation test
 func createValidCommand() *cobra.Command {
 	var cmd *cobra.Command
-	cmd = NewConvertCmd()
+	cmd = GetNewCmd()
 
 	gopathDir := os.Getenv("GOPATH")
 	nginxDir := filepath.Join(gopathDir, "src/github.com/redhat-nfvpe/helm2go-operator-sdk/test/nginx")
@@ -134,7 +134,7 @@ func createValidCommand() *cobra.Command {
 // creates an invalid command for use in the argument validation test
 func createInvalidCommand() *cobra.Command {
 	var cmd *cobra.Command
-	cmd = NewConvertCmd()
+	cmd = GetNewCmd()
 
 	gopathDir := os.Getenv("GOPATH")
 	nginxDir := filepath.Join(gopathDir, "src/github.com/redhat-nfvpe/helm2go-operator-sdk/test/nginx")
@@ -144,13 +144,14 @@ func createInvalidCommand() *cobra.Command {
 		fmt.Sprintf("--helm-chart=%s", nginxDir),
 		fmt.Sprintf("--api-version=%s", "app.example.com/v1alpha1"),
 		fmt.Sprintf("--kind=%s", "Ngnix"),
+		fmt.Sprintf("--mock=%s", "true"),
 	})
 	return cmd
 }
 
 func createInvalidOperatorName() *cobra.Command {
 	var cmd *cobra.Command
-	cmd = NewConvertCmd()
+	cmd = GetNewCmd()
 
 	gopathDir := os.Getenv("GOPATH")
 	nginxDir := filepath.Join(gopathDir, "src/github.com/redhat-nfvpe/helm2go-operator-sdk/test/nginx")
@@ -161,13 +162,14 @@ func createInvalidOperatorName() *cobra.Command {
 		fmt.Sprintf("--helm-chart=%s", nginxDir),
 		fmt.Sprintf("--api-version=%s", "app.example.com/v1alpha1"),
 		fmt.Sprintf("--kind=%s", "Ngnix"),
+		fmt.Sprintf("--mock=%s", "true"),
 	})
 	return cmd
 }
 
 func createInvalidKindName() *cobra.Command {
 	var cmd *cobra.Command
-	cmd = NewConvertCmd()
+	cmd = GetNewCmd()
 
 	gopathDir := os.Getenv("GOPATH")
 	nginxDir := filepath.Join(gopathDir, "src/github.com/redhat-nfvpe/helm2go-operator-sdk/test/nginx")

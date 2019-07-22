@@ -1,4 +1,4 @@
-package convert
+package new
 
 import (
 	"path/filepath"
@@ -7,13 +7,13 @@ import (
 	"github.com/tav/golly/log"
 )
 
-// NewConvertCmd ...
-func NewConvertCmd() *cobra.Command {
+// GetNewCmd ...
+func GetNewCmd() *cobra.Command {
 	newCmd := &cobra.Command{
-		Use:   "convert <New Name>",
-		Short: "Converts an existing Helm Chart Operator into a Go Operator",
-		Long:  "Utilizes the Helm Rendering Engine and Operator-SDK to consumer an existing Helm Chart operator and then produces a Go Operator",
-		RunE:  convertFunc,
+		Use:   "new <New Name>",
+		Short: "Builds a Go Operator from an existing Helm Chart",
+		Long:  "Utilizes the Helm Rendering Engine and Operator-SDK to consume an existing Helm Chart to produce a Go Operator",
+		RunE:  newFunc,
 	}
 
 	newCmd.Flags().StringVar(&helmChartRef, "helm-chart", "", "Initialize helm operator with existing helm chart (<URL>, <repo>/<name>, or local path)")
@@ -48,7 +48,7 @@ var (
 	mock              bool
 )
 
-func convertFunc(cmd *cobra.Command, args []string) error {
+func newFunc(cmd *cobra.Command, args []string) error {
 
 	chartClient := NewChartClient()
 	chartClient.SetValues(helmChartRef, helmChartVersion, helmChartRepo, username, password, helmChartCAFile, helmChartCertFile, helmChartKeyFile)
@@ -68,7 +68,7 @@ func convertFunc(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	log.Infof("🤠 Converting Existing Helm Chart %s to Go Operator %s!", helmChartRef, operatorName)
+	log.Infof("🤠 Creating Go Operator %s from Helm Chart %s!", operatorName, chartClient.HelmChartRef)
 
 	// load the spcecified helm chart
 
