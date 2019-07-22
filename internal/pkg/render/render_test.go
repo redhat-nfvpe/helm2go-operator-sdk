@@ -13,7 +13,7 @@ func TestWriteToTemp(t *testing.T) {
 		"twoDir/src/another.txt": "This is more file content",
 	}
 
-	testDir, err := filepath.Abs("../../test/")
+	testDir, err := filepath.Abs("../../../test/")
 	if err != nil {
 		panic(err)
 	}

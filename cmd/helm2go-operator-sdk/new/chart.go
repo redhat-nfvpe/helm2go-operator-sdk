@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 
 	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/pathconfig"
+	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/pkg/load"
+	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/pkg/render"
+	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/pkg/templating"
 	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/resourcecache"
-	"github.com/redhat-nfvpe/helm2go-operator-sdk/pkg/load"
-	"github.com/redhat-nfvpe/helm2go-operator-sdk/pkg/render"
-	"github.com/redhat-nfvpe/helm2go-operator-sdk/pkg/templating"
 	"k8s.io/helm/pkg/chartutil"
 	"k8s.io/helm/pkg/downloader"
 	"k8s.io/helm/pkg/getter"
