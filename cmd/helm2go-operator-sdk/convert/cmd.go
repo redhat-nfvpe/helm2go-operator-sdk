@@ -3,9 +3,6 @@ package convert
 import (
 	"path/filepath"
 
-	"k8s.io/helm/pkg/proto/hapi/chart"
-
-	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/pathconfig"
 	"github.com/spf13/cobra"
 	"github.com/tav/golly/log"
 )
@@ -30,6 +27,7 @@ func NewConvertCmd() *cobra.Command {
 	newCmd.Flags().StringVar(&apiVersion, "api-version", "", "Kubernetes apiVersion and has a format of $GROUP_NAME/$VERSION (e.g app.example.com/v1alpha1)")
 	newCmd.Flags().StringVar(&kind, "kind", "", "Kubernetes CustomResourceDefintion kind. (e.g AppService)")
 	newCmd.Flags().BoolVar(&clusterScoped, "cluster-scoped", false, "Operator cluster scoped or not")
+	newCmd.Flags().BoolVar(&mock, "mock", false, "Used for testing")
 	return newCmd
 }
 
@@ -47,17 +45,14 @@ var (
 	clusterScoped     bool
 	outputDir         string
 	operatorName      string
-)
-
-var (
-	c          *chart.Chart
-	chartName  string
-	pathConfig *pathconfig.PathConfig
+	mock              bool
 )
 
 func convertFunc(cmd *cobra.Command, args []string) error {
 
-	setBasePathConfig()
+	chartClient := NewChartClient()
+	chartClient.SetValues(helmChartRef, helmChartVersion, helmChartRepo, username, password, helmChartCAFile, helmChartCertFile, helmChartKeyFile)
+	chartClient.PathConfig, _ = GetBasePathConfig()
 
 	if err := parse(args); err != nil {
 		log.Error("error parsing arguments: ", err)
@@ -76,22 +71,24 @@ func convertFunc(cmd *cobra.Command, args []string) error {
 	log.Infof("🤠 Converting Existing Helm Chart %s to Go Operator %s!", helmChartRef, operatorName)
 
 	// load the spcecified helm chart
-	err := loadChart()
+
+	err := chartClient.LoadChart()
+
 	if err != nil {
 		log.Error("error loading chart: ", err)
 		return err
 	}
 
-	rcache, err := doHelmGoConversion()
+	rcache, err := chartClient.DoHelmGoConversion()
 	if err != nil {
 		log.Error("error performing chart conversion: ", err)
 		return err
 	}
 
-	outputDir = filepath.Join(pathConfig.GetBasePath(), operatorName)
+	outputDir = filepath.Join(chartClient.PathConfig.GetBasePath(), operatorName)
 
 	//create the operator-sdk scaffold
-	_, err = doGoScaffold()
+	err = doGoScaffold()
 	if err != nil {
 		log.Error("error generating scaffolding: ", err)
 		return err

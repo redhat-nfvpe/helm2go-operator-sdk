@@ -138,15 +138,16 @@ func outdatedVersion(version string) (bool, error) {
 	return false, nil
 }
 
-func setBasePathConfig() error {
+// GetBasePathConfig ....
+func GetBasePathConfig() (*pathconfig.PathConfig, error) {
 	// get the current directory
 	cwd, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("error getting working directory")
+		return nil, fmt.Errorf("error getting working directory")
 	}
 
 	basePath := cwd
-	pathConfig = pathconfig.NewConfig(basePath)
+	pathConfig := pathconfig.NewConfig(basePath)
 
-	return nil
+	return pathConfig, nil
 }

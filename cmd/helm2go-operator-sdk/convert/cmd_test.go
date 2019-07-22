@@ -2,26 +2,43 @@ package convert
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/pathconfig"
 	"github.com/spf13/cobra"
 )
 
 var cwd, _ = os.Getwd()
 var parent = filepath.Dir(filepath.Dir(filepath.Dir(cwd)))
 
+func silencelog() {
+	log.SetOutput(ioutil.Discard)
+}
+func resetlog() {
+	log.SetOutput(os.Stdout)
+}
+
 func TestLoadChartGetsLocalChart(t *testing.T) {
+	//g := gomega.NewGomegaWithT(t)
+	silencelog()
+
 	var local = "/test/bitcoind"
 	var testLocal = parent + local
 
-	// point test to right directory
-	helmChartRef = testLocal
 	// load the chart
-	loadChart()
+	chartClient := NewChartClient()
+	chartClient.HelmChartRef = testLocal
+	err := chartClient.LoadChart()
+	if err != nil {
+		t.Fatal(err)
+	}
 	// verify that the chart loads the right thing
-	if chartName != "bitcoind" {
+	if chartClient.Chart.GetMetadata().Name != "bitcoind" {
+		resetlog()
 		t.Fatalf("Unexpected Chart Name!")
 	}
 }
@@ -30,21 +47,28 @@ func TestCommandFlagValidation(t *testing.T) {
 	// initiate flags for testing
 	var err error
 	helmChartRef = ""
+	silencelog()
 	if err = verifyFlags(); err == nil {
+		resetlog()
 		t.Logf("Error: %v", err)
 		t.Fatal("Expected Flag Validation Error: --helm-chart-ref")
+		silencelog()
 	}
 	helmChartRef = "./test/tomcat"
 	kind = "Tomcat"
 	apiVersion = ""
 	if err = verifyFlags(); err == nil {
+		resetlog()
 		t.Logf("Error: %v", err)
 		t.Fatal("Expected Flag Validation Error: --api-version")
+		silencelog()
 	}
 	apiVersion = "app.example.com/v1alpha1"
 	if err = verifyFlags(); err != nil {
+		resetlog()
 		t.Logf("Error: %v", err)
 		t.Fatal("Unexpected Flag Validation Error")
+		silencelog()
 	}
 }
 
@@ -53,25 +77,38 @@ func TestKindTypeValidation(t *testing.T) {
 	apiVersion = "app.example.com/v1alpha1"
 	helmChartRef = "./test/tomcat"
 	kind = ""
+	silencelog()
 	if err = verifyFlags(); err == nil {
-		t.Logf("Error: %v", err)
+		resetlog()
 		t.Fatal("Expected Flag Validation Error: kind")
+		silencelog()
 	}
 	kind = "tensorflow-notebook"
 	if err = verifyFlags(); err == nil {
-		t.Fatal("Expected Lowercase Flag Validation Error: --kind")
+		resetlog()
+		t.Fatalf("Expected Lowercase Flag Validation Error: --kind %v", err)
+		silencelog()
 	}
 	kind = "tensorflowNotebook"
 	if err = verifyFlags(); err == nil {
+		resetlog()
 		t.Fatal("Expected Lowercase Flag Validation Error: --kind")
+		t.Fatal(err)
+		silencelog()
 	}
 	kind = "Tensorflow-Notebook"
 	if err = verifyFlags(); err == nil {
+		resetlog()
 		t.Fatal("Expected Hyphen Flag Validation Error: --kind")
+		t.Fatal(err)
+		silencelog()
 	}
 	kind = "TensorflowNotebook"
 	if err = verifyFlags(); err != nil {
+		resetlog()
 		t.Fatal("Unexpected Flag Validation Error")
+		t.Fatal(err)
+		silencelog()
 	}
 }
 
@@ -89,8 +126,8 @@ func createValidCommand() *cobra.Command {
 		fmt.Sprintf("--helm-chart=%s", nginxDir),
 		fmt.Sprintf("--api-version=%s", "app.example.com/v1alpha1"),
 		fmt.Sprintf("--kind=%s", "Nginx"),
+		fmt.Sprintf("--mock=%s", "true"),
 	})
-	fmt.Println(cmd)
 	return cmd
 }
 
@@ -145,51 +182,80 @@ func createInvalidKindName() *cobra.Command {
 	return cmd
 }
 
-func TestCommandArgumentValidation(t *testing.T) {
+func TestInvalidCommandArgumentValidation(t *testing.T) {
 	var err error
+	silencelog()
 	if err = createInvalidCommand().Execute(); err == nil {
+		resetlog()
 		t.Logf("Error: %v", err)
-		os.RemoveAll("./test-operator")
 		t.Fatal("Expected Error! Command Has No Operator Name Argument.")
+		silencelog()
 	}
 	if err = createInvalidOperatorName().Execute(); err == nil {
+		resetlog()
 		t.Logf("Error: %v", err)
-		os.RemoveAll("./test-operator")
 		t.Fatal("Expected Error! Command Has Invalid(empty) Operator Name Argument.")
+		silencelog()
 	}
 	if err = createInvalidKindName().Execute(); err == nil {
+		resetlog()
 		t.Logf("Error: %v", err)
-		os.RemoveAll("./test-operator")
 		t.Fatal("Expected Error! Command Has Invalid(Has Space) API Version Argument.")
+		silencelog()
 	}
-	if err = createValidCommand().Execute(); err != nil {
+
+}
+
+func TestValidCommandArgument(t *testing.T) {
+	defer os.RemoveAll("./test-operator")
+	if err := createValidCommand().Execute(); err != nil {
+		resetlog()
 		t.Logf("Error: %v", err)
 		os.RemoveAll("./test-operator")
 		t.Fatal("Unexpected Error! Provided Correct Arguments and Flags.")
+		silencelog()
 	}
 
-	// clean up
-	os.RemoveAll("./test-operator")
 }
 
+// clean up
+
 func TestHelmChartDownload(t *testing.T) {
-	helmChartRef = "auto-deploy-app"
-	helmChartRepo = "https://charts.gitlab.io/"
-	outputDir = "test-operator"
-	err := loadChart()
+	var client HelmChartClient
+
+	gopathDir := os.Getenv("GOPATH")
+	pathConfig := pathconfig.NewConfig(filepath.Join(gopathDir, "src/github.com/redhat-nfvpe/helm2go-operator-sdk"))
+	client.PathConfig = pathConfig
+
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		fmt.Printf("Panic: %+v\n", r)
+	// 	}
+	// }()
+
+	client.HelmChartRef = "auto-deploy-app"
+	client.HelmChartRepo = "https://charts.gitlab.io/"
+	err := client.LoadChart()
 	if err != nil {
+		resetlog()
 		t.Fatalf("Unexpected Error: %v\n", err)
+		silencelog()
 	}
 
-	helmChartRef = "not-a-chart"
-	err = loadChart()
+	client.HelmChartRef = "not-a-chart"
+	client.HelmChartRepo = ""
+	err = client.LoadChart()
 	if err == nil {
+		resetlog()
 		t.Fatalf("Expected Error Chart Does Not Exist!")
+		silencelog()
 	}
 
-	helmChartRepo = "invalidrepo.io"
-	err = loadChart()
+	client.HelmChartRepo = "invalidrepo.io"
+	err = client.LoadChart()
 	if err == nil {
+		resetlog()
 		t.Fatalf("Expected Error Invalid Repo!")
+		silencelog()
 	}
 }

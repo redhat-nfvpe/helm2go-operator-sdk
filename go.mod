@@ -10,15 +10,15 @@ require (
 	github.com/cyphar/filepath-securejoin v0.2.2
 	github.com/ghodss/yaml v0.0.0-20180820084758-c7ce16629ff4
 	github.com/gobwas/glob v0.2.3
-	github.com/gogo/protobuf v0.0.0-20171007142547-342cbe0a0415
+	github.com/gogo/protobuf v1.0.0
 	github.com/golang/protobuf v1.2.0
-	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf
-	github.com/google/uuid v0.0.0-20161128191214-064e2069ce9c
+	github.com/google/gofuzz v1.0.0
+	github.com/google/uuid v1.1.1
 	github.com/huandu/xstrings v1.2.0
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
 	github.com/imdario/mergo v0.3.7
 	github.com/inconshreveable/mousetrap v1.0.0
-	github.com/json-iterator/go v0.0.0-20180701071628-ab8a2e0c74be
+	github.com/json-iterator/go v1.1.6
 	github.com/mattn/go-colorable v0.1.2
 	github.com/mattn/go-isatty v0.0.8
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
@@ -28,16 +28,20 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.3
 	github.com/tav/golly v0.0.0-20180823113506-ad032321f11e
-	golang.org/x/crypto v0.0.0-20180808211826-de0752318171
-	golang.org/x/net v0.0.0-20190206173232-65e2d4e15006
+	golang.org/x/crypto v0.0.0-20190611184440-5c40567a22f8
+	golang.org/x/net v0.0.0-20190613194153-d28f0bde5980
 	golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7
 	golang.org/x/text v0.3.2
 	gopkg.in/inf.v0 v0.9.0
 	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/api v0.0.0-20190712022805-31fe033ae6f9
-	k8s.io/apimachinery v0.0.0-20190404173353-6a84e37a896d
+	k8s.io/apimachinery v0.0.0-20190711222657-391ed67afa7b
 	k8s.io/client-go v0.0.0-20190409021438-1a26190bd76a
+	k8s.io/code-generator v0.0.0-20190717022600-77f3a1fe56bb
+	k8s.io/gengo v0.0.0-20190327210449-e17681d19d3a
 	k8s.io/helm v2.14.2+incompatible
-	k8s.io/klog v0.0.0-20190306015804-8e90cee79f82
+	k8s.io/klog v0.3.1
+	k8s.io/kube-openapi v0.0.0-20190709113604-33be087ad058
+	sigs.k8s.io/controller-runtime v0.1.12
 	sigs.k8s.io/yaml v1.1.0
 )
