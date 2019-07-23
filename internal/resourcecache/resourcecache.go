@@ -37,21 +37,6 @@ const (
 	PackageTypeServiceAccounts                 = "serviceaccounts"
 )
 
-// KindTypeLookup ...
-var KindTypeLookup = map[int]KindType{
-	0:  KindTypeConfigMap,
-	1:  KindTypeServiceAccount,
-	2:  KindTypeRole,
-	3:  KindTypeClusterRole,
-	4:  KindTypeRoleBinding,
-	5:  KindTypeClusterRoleBinding,
-	6:  KindTypeService,
-	7:  KindTypeSecret,
-	8:  KindTypeVolume,
-	9:  KindTypeDaemonSet,
-	10: KindTypeDeployment,
-}
-
 //const for KindType
 const (
 	KindTypeConfigMap          KindType = "ConfigMap"

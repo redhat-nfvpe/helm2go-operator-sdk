@@ -63,6 +63,13 @@ func TestCommandFlagValidation(t *testing.T) {
 		t.Fatal("Expected Flag Validation Error: --api-version")
 		silencelog()
 	}
+	apiVersion = "app.example/v1alpha1"
+	if err = verifyFlags(); err == nil {
+		resetlog()
+		t.Logf("Error: %v", err)
+		t.Fatal("expected flag validation error; api version does not match naming convention")
+		silencelog()
+	}
 	apiVersion = "app.example.com/v1alpha1"
 	if err = verifyFlags(); err != nil {
 		resetlog()
@@ -259,5 +266,21 @@ func TestHelmChartDownload(t *testing.T) {
 		resetlog()
 		t.Fatalf("Expected Error Invalid Repo!")
 		silencelog()
+	}
+}
+
+func TestAPINamingConventionValidation(t *testing.T) {
+	testCases := map[string]bool{
+		"app.example.com/v1alpha1": true,
+		"web.k8s.io/v1":            true,
+		"k8s.io":                   false,
+		"app,s.k8s.io/v1beta1":     false,
+		"apps.example/v1beta1":     false,
+	}
+
+	for v, ok := range testCases {
+		if m := apiVersionMatchesConvention(v); m != ok {
+			t.Fatalf("error validating: %v; expected %v got %v", v, ok, m)
+		}
 	}
 }
