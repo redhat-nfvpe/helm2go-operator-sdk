@@ -104,27 +104,10 @@ func (r *Reconcile{{ .Kind }}) Reconcile(request reconcile.Request) (reconcile.R
 	}
 	// Pod already exists - don't requeue
 	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
+	
+	{{range $r := .ResourceForReconcile -}}
+		{{$r}}
+	{{end}}
+
 	return reconcile.Result{}, nil
-}
-// newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *{{ .OwnerAPIVersion }}.{{ .Kind }}) *corev1.Pod {
-	labels := map[string]string{
-		"app": cr.Name,
-	}
-	return &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-pod",
-			Namespace: cr.Namespace,
-			Labels:    labels,
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:    "busybox",
-					Image:   "busybox",
-					Command: []string{"sleep", "3600"},
-				},
-			},
-		},
-	}
 }

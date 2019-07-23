@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"text/template"
 
 	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/resourcecache"
@@ -16,14 +17,16 @@ import (
 
 // TemplateConfig is used as payload for executing the templating functionality
 type TemplateConfig struct {
-	ImportStatements []string
-	PackageName      string
-	Kind             string
-	APIVersion       string
-	ResourceName     string
-	ResourceType     string
-	Resource         interface{}
-	ResourceJSON     string
+	ImportStatements          []string
+	PackageName               string
+	Kind                      string
+	APIVersion                string
+	OwnerAPIVersion           string
+	ResourceName              string
+	ResourceType              string
+	ResourceTypeInstantiation string
+	Resource                  interface{}
+	ResourceJSON              string
 	//resource     TemplateResource *need to create a template resource that works with all kubernetes resources*
 }
 
@@ -40,15 +43,28 @@ type ControllerWatchFuncConfig struct {
 // ControllerTemplateConfig ...
 // TODO figure out what is needed for this struct
 type ControllerTemplateConfig struct {
-	Kind            string
-	LowerKind       string
-	OwnerAPIVersion string
-	ImportMap       map[string]string
-	ResourceWatches []string
+	Kind                 string
+	LowerKind            string
+	OwnerAPIVersion      string
+	ImportMap            map[string]string
+	ResourceWatches      []string
+	ResourceForReconcile []string
+}
+
+// ReconcileTemplateConfig ...
+type ReconcileTemplateConfig struct {
+	ResourceImportPackage   string
+	ResourceType            string
+	ResourceName            string
+	LowerResourceName       string
+	Kind                    string
+	LowerKind               string
+	OwnerAPIVersion         string
+	PluralLowerResourceName string
 }
 
 // CacheTemplating takes a resource cache and renders its respective template values
-func CacheTemplating(rcache *resourcecache.ResourceCache, kind, apiVersion string) map[string]string {
+func CacheTemplating(rcache *resourcecache.ResourceCache, outputDir, kind, apiVersion string) map[string]string {
 	var t map[string]string
 	t = make(map[string]string)
 	c := rcache.PrepareCacheForFile()
@@ -61,20 +77,27 @@ func CacheTemplating(rcache *resourcecache.ResourceCache, kind, apiVersion strin
 			_ = fmt.Errorf("%v", err)
 		}
 		conf := TemplateConfig{
-			ImportStatements: getTemplateImports(&r.GetResourceFunctions()[0].Data),
-			PackageName:      string(r.PackageName),
-			Kind:             kind,
-			ResourceName:     getTemplateResourceTitle(&r.GetResourceFunctions()[0].Data),
-			ResourceType:     reflect.TypeOf((r.GetResourceFunctions()[0].Data)).String(),
-			Resource:         getTemplateResourceTitle(&r.GetResourceFunctions()[0].Data),
-			ResourceJSON:     string(bytes),
-			APIVersion:       apiVersion,
+			ImportStatements:          append(getTemplateImports(&r.GetResourceFunctions()[0].Data), getOwnerAPIVersion(apiVersion, kind)+` "`+getAppTypeImport(outputDir, apiVersion)+`"`),
+			PackageName:               string(r.PackageName),
+			Kind:                      kind,
+			ResourceName:              getTemplateResourceTitle(&r.GetResourceFunctions()[0].Data),
+			ResourceType:              reflect.TypeOf((r.GetResourceFunctions()[0].Data)).String(),
+			ResourceTypeInstantiation: getInstantiationString(reflect.TypeOf((r.GetResourceFunctions()[0].Data)).String()),
+			Resource:                  getTemplateResourceTitle(&r.GetResourceFunctions()[0].Data),
+			ResourceJSON:              string(bytes),
+			APIVersion:                apiVersion,
+			OwnerAPIVersion:           getOwnerAPIVersion(apiVersion, kind),
 		}
 		tmpl, err := configDeclarationTemplate(conf)
 		t[string(kt)] = tmpl
 	}
 
 	return t
+}
+
+func getInstantiationString(resourceType string) string {
+	base := resourceType[1:]
+	return "&" + base + "{}"
 }
 
 // ResourceObjectToGoResourceFile ...
@@ -152,16 +175,22 @@ func ResourceFileStructure(rcache *resourcecache.ResourceCache, outputDir string
 func OverwriteController(outputDir, kind, apiVersion string, rcache *resourcecache.ResourceCache) bool {
 
 	var watchFuncs []string
+	var reconcileBlocks []string
+	var resourceControllerImports map[string]string
 	var wr bytes.Buffer
 	var temp *template.Template
 	var err error
 	var c ControllerTemplateConfig
 	var w ControllerWatchFuncConfig
 
+	resourceControllerImports = make(map[string]string)
 	ownerAPIVersion := getOwnerAPIVersion(apiVersion, kind)
 	lowerKind := kindToLowerCamel(kind)
 
 	for _, r := range rcache.PrepareCacheForFile() {
+
+		resourceControllerImports[getResourceCRImport(outputDir, strings.ToLower(getTemplateResourceTitle(&r.GetResourceFunctions()[0].Data)))] = ""
+
 		wr = bytes.Buffer{}
 		temp, err = template.New("controllerFuncTemplate").Parse(getControllerFunctionTemplate())
 		if err != nil {
@@ -188,14 +217,54 @@ func OverwriteController(outputDir, kind, apiVersion string, rcache *resourcecac
 
 		watchFuncs = append(watchFuncs, wr.String())
 	}
+
+	cacheToLookup := *rcache.GetCache()
+
+	// for resourcetype in lookup
+	for _, kindtype := range resourcecache.KindTypeLookup {
+		if r, ok := cacheToLookup[kindtype]; ok {
+			wr = bytes.Buffer{}
+			temp, err = template.New("reconcileResourceTemplate").Parse(getReconcileBlockTemplate())
+			if err != nil {
+				log.Println(err)
+				return false
+			}
+
+			resourceType := getTemplateResourceTitle(&r.GetResourceFunctions()[0].Data)
+
+			reconcileConfig := ReconcileTemplateConfig{
+				OwnerAPIVersion:         ownerAPIVersion,
+				Kind:                    kind,
+				LowerKind:               lowerKind,
+				ResourceImportPackage:   getResourceImportPackage(resourceType),
+				ResourceType:            resourceType,
+				ResourceName:            getTemplateResourceTitle(&r.GetResourceFunctions()[0].Data),
+				LowerResourceName:       strings.ToLower(getTemplateResourceTitle(&r.GetResourceFunctions()[0].Data)),
+				PluralLowerResourceName: getNamePlural(strings.ToLower(getTemplateResourceTitle(&r.GetResourceFunctions()[0].Data))),
+			}
+
+			err = temp.Execute(&wr, reconcileConfig)
+			if err != nil {
+				log.Println(err)
+				return false
+			}
+
+			reconcileBlocks = append(reconcileBlocks, wr.String())
+		}
+	}
 	wr = bytes.Buffer{}
 	temp, err = template.New("controllerTemplate").Parse(getControllerTemplate())
+	importMap := getImportMap(outputDir, kind, apiVersion)
+	for k, v := range resourceControllerImports {
+		importMap[k] = v
+	}
 	c = ControllerTemplateConfig{
 		kind,
 		lowerKind,
 		ownerAPIVersion,
-		getImportMap(outputDir, kind, apiVersion),
+		importMap,
 		watchFuncs,
+		reconcileBlocks,
 	}
 
 	err = temp.Execute(&wr, c)
@@ -222,4 +291,28 @@ func OverwriteController(outputDir, kind, apiVersion string, rcache *resourcecac
 	log.Printf("Wrote %d Bytes!", n)
 	return true
 
+}
+
+func getReconcileBlockTemplate() string {
+	return `
+	{{.LowerResourceName}} := {{.PluralLowerResourceName}}.New{{.ResourceName}}ForCR(instance)
+	// Set {{ .Kind }} instance as the owner and controller
+	if err{{.ResourceName}} := controllerutil.SetControllerReference(instance, {{.LowerResourceName}}, r.scheme); err{{.ResourceName}} != nil {
+		return reconcile.Result{}, err{{.ResourceName}}
+	}
+	// Check if this {{.ResourceName}} already exists
+	found{{.ResourceName}} := &{{.ResourceImportPackage}}.{{.ResourceType}}{}
+	err{{.ResourceName}} := r.client.Get(context.TODO(), types.NamespacedName{Name: {{.LowerResourceName}}.Name, Namespace: {{.LowerResourceName}}.Namespace}, found{{.ResourceName}})
+	if err{{.ResourceName}} != nil && errors.IsNotFound(err{{.ResourceName}}) {
+		reqLogger.Info("Creating a new {{.ResourceName}}", "{{.LowerResourceName}}.Namespace", {{.LowerResourceName}}.Namespace, "{{.LowerResourceName}}.Name", {{.LowerResourceName}}.Name)
+		err{{.ResourceName}} = r.client.Create(context.TODO(), found{{.ResourceName}})
+		if err{{.ResourceName}} != nil {
+			return reconcile.Result{}, err{{.ResourceName}}
+		}
+		// Pod created successfully - don't requeue
+		return reconcile.Result{}, nil
+	} else if err{{.ResourceName}} != nil {
+		return reconcile.Result{}, err{{.ResourceName}}
+	}
+	`
 }

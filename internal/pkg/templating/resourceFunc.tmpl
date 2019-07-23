@@ -8,7 +8,7 @@ import (
 
 // New{{ .ResourceName }}ForCR ...
 func New{{ .ResourceName }}ForCR(r *{{.APIVersion}}.{{ .Kind }}) {{ .ResourceType }}{
-    var e {{ .ResourceType }}
+    e :=  {{ .ResouceTypeInstantiation }}
     elemYaml := `
     {{ .ResourceJSON }}
     `

@@ -145,7 +145,7 @@ func scaffoldOverwrite(outputDir, kind, apiVersion string, rcache *resourcecache
 		fmt.Println(ok)
 	}
 	// create templates for writing to file
-	templates := templating.CacheTemplating(rcache, kind, apiVersion)
+	templates := templating.CacheTemplating(rcache, outputDir, kind, apiVersion)
 	// templates to files; outputDir is the parent directory where the operator scaffolding lives
 	resDir := filepath.Join(outputDir, "pkg", "resources")
 	// create the necessary package resource specific folders
