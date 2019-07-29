@@ -6,7 +6,11 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+
 	"testing"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 
 	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/pathconfig"
 	"github.com/spf13/cobra"
@@ -22,102 +26,69 @@ func resetlog() {
 	log.SetOutput(os.Stdout)
 }
 
-func TestLoadChartGetsLocalChart(t *testing.T) {
-	//g := gomega.NewGomegaWithT(t)
-	silencelog()
-
-	var local = "/test/bitcoind"
-	var testLocal = parent + local
-
-	// load the chart
-	chartClient := NewChartClient()
-	chartClient.HelmChartRef = testLocal
-	err := chartClient.LoadChart()
-	if err != nil {
-		t.Fatal(err)
-	}
-	// verify that the chart loads the right thing
-	if chartClient.Chart.GetMetadata().Name != "bitcoind" {
-		resetlog()
-		t.Fatalf("Unexpected Chart Name!")
-	}
+func TestCommand(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Command")
 }
 
-func TestCommandFlagValidation(t *testing.T) {
-	// initiate flags for testing
-	var err error
-	helmChartRef = ""
-	silencelog()
-	if err = verifyFlags(); err == nil {
-		resetlog()
-		t.Logf("Error: %v", err)
-		t.Fatal("Expected Flag Validation Error: --helm-chart-ref")
-		silencelog()
-	}
-	helmChartRef = "./test/tomcat"
-	kind = "Tomcat"
-	apiVersion = ""
-	if err = verifyFlags(); err == nil {
-		resetlog()
-		t.Logf("Error: %v", err)
-		t.Fatal("Expected Flag Validation Error: --api-version")
-		silencelog()
-	}
-	apiVersion = "app.example/v1alpha1"
-	if err = verifyFlags(); err == nil {
-		resetlog()
-		t.Logf("Error: %v", err)
-		t.Fatal("expected flag validation error; api version does not match naming convention")
-		silencelog()
-	}
-	apiVersion = "app.example.com/v1alpha1"
-	if err = verifyFlags(); err != nil {
-		resetlog()
-		t.Logf("Error: %v", err)
-		t.Fatal("Unexpected Flag Validation Error")
-		silencelog()
-	}
-}
+var _ = Describe("Load Chart", func() {
+	It("Gets Local Chart", func() {
+		var local = "/test/bitcoind"
+		var testLocal = parent + local
+		chartClient := NewChartClient()
+		chartClient.HelmChartRef = testLocal
+		err := chartClient.LoadChart()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(chartClient.Chart.GetMetadata().Name).To(Equal("bitcoind"))
+	})
+})
 
-func TestKindTypeValidation(t *testing.T) {
-	var err error
-	apiVersion = "app.example.com/v1alpha1"
-	helmChartRef = "./test/tomcat"
-	kind = ""
-	silencelog()
-	if err = verifyFlags(); err == nil {
-		resetlog()
-		t.Fatal("Expected Flag Validation Error: kind")
-		silencelog()
-	}
-	kind = "tensorflow-notebook"
-	if err = verifyFlags(); err == nil {
-		resetlog()
-		t.Fatalf("Expected Lowercase Flag Validation Error: --kind %v", err)
-		silencelog()
-	}
-	kind = "tensorflowNotebook"
-	if err = verifyFlags(); err == nil {
-		resetlog()
-		t.Fatal("Expected Lowercase Flag Validation Error: --kind")
-		t.Fatal(err)
-		silencelog()
-	}
-	kind = "Tensorflow-Notebook"
-	if err = verifyFlags(); err == nil {
-		resetlog()
-		t.Fatal("Expected Hyphen Flag Validation Error: --kind")
-		t.Fatal(err)
-		silencelog()
-	}
-	kind = "TensorflowNotebook"
-	if err = verifyFlags(); err != nil {
-		resetlog()
-		t.Fatal("Unexpected Flag Validation Error")
-		t.Fatal(err)
-		silencelog()
-	}
-}
+var _ = Describe("Flag Validation", func() {
+	It("Verifies Command Flags", func() {
+		var err error
+		helmChartRef = ""
+		err = verifyFlags()
+		Expect(err).To(HaveOccurred())
+
+		helmChartRef = "./test/tomcat"
+		kind = "Tomcat"
+		apiVersion = ""
+		err = verifyFlags()
+		Expect(err).To(HaveOccurred())
+
+		apiVersion = "app.example/v1alpha1"
+		err = verifyFlags()
+		Expect(err).To(HaveOccurred())
+		apiVersion = "app.example.com/v1alpha1"
+		err = verifyFlags()
+		Expect(err).ToNot(HaveOccurred())
+	})
+	It("Verifies Kind Flag", func() {
+		var err error
+		apiVersion = "app.example.com/v1alpha1"
+		helmChartRef = "./test/tomcat"
+
+		kind = ""
+		err = verifyFlags()
+		Expect(err).To(HaveOccurred())
+
+		kind = "tensorflow-notebook"
+		err = verifyFlags()
+		Expect(err).To(HaveOccurred())
+
+		kind = "tensorflowNotebook"
+		err = verifyFlags()
+		Expect(err).To(HaveOccurred())
+
+		kind = "Tensorflow-Notebook"
+		err = verifyFlags()
+		Expect(err).To(HaveOccurred())
+
+		kind = "TensorflowNotebook"
+		err = verifyFlags()
+		Expect(err).ToNot(HaveOccurred())
+	})
+})
 
 //creates a command for use in the argument validation test
 func createValidCommand() *cobra.Command {
