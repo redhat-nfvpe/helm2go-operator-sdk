@@ -1,6 +1,17 @@
+<<<<<<< HEAD
 The MIT License (MIT)
 
 Copyright (c) 2016 Yasuhiro Matsumoto
+=======
+<<<<<<< HEAD:vendor/github.com/Masterminds/semver/LICENSE.txt
+The Masterminds
+Copyright (C) 2014-2015, Matt Butcher and Matt Farina
+=======
+The MIT License (MIT)
+
+Copyright (c) 2016 Yasuhiro Matsumoto
+>>>>>>> Ginkgo testing for cmd package, validation package, render package, templating package, resourcecache package:vendor/github.com/onsi/ginkgo/reporters/stenographer/support/go-colorable/LICENSE
+>>>>>>> Ginkgo testing for cmd package, validation package, render package, templating package, resourcecache package
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
