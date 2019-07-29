@@ -84,8 +84,6 @@ func matchVersion(cmdOut *[]byte) error {
 	pattern := regexp.MustCompile(`.*version\: +v(\d.\d.\d).*commit\: +(.*)`)
 	matches := pattern.FindStringSubmatch(string(*cmdOut))
 
-	fmt.Println(matches)
-
 	if l := len(matches); l != 2+1 {
 		return fmt.Errorf("expected three matches, received %d instead", l)
 	}

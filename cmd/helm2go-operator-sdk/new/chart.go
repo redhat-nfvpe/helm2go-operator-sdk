@@ -141,9 +141,6 @@ func (hc *HelmChartClient) DoHelmGoConversion() (*resourcecache.ResourceCache, e
 func scaffoldOverwrite(outputDir, kind, apiVersion string, rcache *resourcecache.ResourceCache) error {
 
 	ok := templating.OverwriteController(outputDir, kind, apiVersion, rcache)
-	if !ok {
-		fmt.Println(ok)
-	}
 	// create templates for writing to file
 	templates := templating.CacheTemplating(rcache, outputDir, kind, apiVersion)
 	// templates to files; outputDir is the parent directory where the operator scaffolding lives
