@@ -28,7 +28,7 @@ func YAMLUnmarshalResources(rp string, validMap *validatemap.ValidateMap, rc *re
 	}
 
 	for _, f := range files {
-
+		// if the file is not contained in the map, continue without it
 		if containValidMap(f.Name(), validMap) {
 			logContinue()
 			continue

@@ -12,8 +12,6 @@ _output
 *.so
 *.dylib
 
-
-nginx-operator/
 # Test binary, build with `go test -c`
 *.test
 
@@ -22,9 +20,5 @@ nginx-operator/
 
 
 ## Testing Purposes Only
-test/drone/
-test/bitcoind/
-
-temp/
-test-operator/
+auto-deploy-app/
 /helm2go-operator-sdk

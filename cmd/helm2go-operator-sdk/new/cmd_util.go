@@ -30,6 +30,9 @@ func verifyFlags() error {
 	if len(apiVersion) == 0 {
 		return fmt.Errorf("Please Specify Operator API Version")
 	}
+	if !apiVersionMatchesConvention(apiVersion) {
+		return fmt.Errorf("api version does not match convention")
+	}
 	if strings.ContainsAny(apiVersion, " ") {
 		return fmt.Errorf("API Version Cannot Contain Spaces")
 	}
@@ -150,4 +153,13 @@ func GetBasePathConfig() (*pathconfig.PathConfig, error) {
 	pathConfig := pathconfig.NewConfig(basePath)
 
 	return pathConfig, nil
+}
+
+func apiVersionMatchesConvention(version string) bool {
+	pattern := regexp.MustCompile(`^([a-zA-Z0-9]*)\.([a-zA-Z0-9]*)\.([a-zA-Z0-9]*)\/([a-zA-Z0-9]*)$`)
+	matches := pattern.FindStringSubmatch(version)
+	if len(matches) != 4+1 {
+		return false
+	}
+	return true
 }

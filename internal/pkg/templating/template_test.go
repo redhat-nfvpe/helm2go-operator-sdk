@@ -90,76 +90,60 @@ func TestGetImport(t *testing.T) {
 	}
 }
 
-func TestResourceTemplate(t *testing.T) {
+func TestReconcileBlockRender(t *testing.T) {
+	var result string
+	var expected string
 
-	type ResourceTemplate struct {
-		PackageName      string
-		ImportStatements []string
-		ResourceName     string
-		APIVersion       string
-		Kind             string
-		ResourceType     string
-		ResourceJSON     string
+	reconcileConfig := ReconcileTemplateConfig{
+		Kind:                    "Memcached",
+		LowerKind:               "memcached",
+		ResourceImportPackage:   "appsv1",
+		ResourceType:            "Deployment",
+		ResourceName:            "Deployment",
+		LowerResourceName:       "deployment",
+		PluralLowerResourceName: "deployments",
 	}
-	r := ResourceTemplate{}
-	r.PackageName = "MyPackage"
-	r.ImportStatements = []string{"A", "b", "c", "d", "e"}
-	r.ResourceName = "Resource"
-	r.APIVersion = "alpha"
-	r.Kind = "Test"
-	r.ResourceType = "RType"
 
-	r.ResourceJSON = `{
-		"glossary": {
-			"title": "example glossary",
-			"GlossDiv": {
-				"title": "S",
-				"GlossList": {
-					"GlossEntry": {
-						"ID": "SGML",
-						"SortAs": "SGML",
-						"GlossTerm": "Standard Generalized Markup Language",
-						"Acronym": "SGML",
-						"Abbrev": "ISO 8879:1986",
-						"GlossDef": {
-							"para": "A meta-markup language, used to create markup languages such as DocBook.",
-							"GlossSeeAlso": ["GML", "XML"]
-						},
-						"GlossSee": "markup"
-					}
-				}
-			}
-		}
-	}`
+	wr := bytes.Buffer{}
 
-	x := `
-		package {{ .PackageName }}
-	
-		import (
-			{{range $index, $statement := .ImportStatements}}
-				{{ $statement }}
-			{{ end }}
-		)
-	
-		// New{{ .ResourceName }}ForCR ...
-		func New{{ .ResourceName }}ForCR(r *{{.APIVersion}}.{{ .Kind }}) {{ .ResourceType }}{
-			var e {{ .ResourceType }}
-			elemYaml :=` + "`" + "{{ .ResourceJSON }}" + "`" + `
-			// Unmarshal Specified JSON to Kubernetes Resource
-			err := json.Unmarshal([]byte(elemYaml), e)
-			if err != nil {
-				panic(err)
-			}
-			return e
-		}
-		`
-	tmpl, err := template.New("test").Parse(x)
+	temp, err := template.New("controllerFuncTemplate").Parse(reconcileConfig.GetTemplate())
 	if err != nil {
-		panic(err)
+		t.Fatalf("unexpected error while loading reconcile block template: %v", err)
 	}
-	var s bytes.Buffer
-	err = tmpl.Execute(&s, r)
+	// execute the template
+	err = temp.Execute(&wr, reconcileConfig)
 	if err != nil {
-		panic(err)
+		t.Fatalf("unexpected error while rendering reconcile block template: %v", err)
+	}
+	result = wr.String()
+	// set the expected value
+	expected = `
+		deployment := deployments.NewDeploymentForCR(instance)
+		reqLogger.Info(deployment.String())
+		// Set Memcached instance as the owner and controller
+		if errDeployment := controllerutil.SetControllerReference(instance, deployment, r.scheme); errDeployment != nil {
+			return reconcile.Result{}, errDeployment
+		}
+		// Check if this Deployment already exists
+		foundDeployment := &appsv1.Deployment{}
+		errDeployment := r.client.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: request.Namespace}, foundDeployment)
+		if errDeployment != nil && errors.IsNotFound(errDeployment) {
+			reqLogger.Info("Creating a new Deployment", "deployment.Namespace", request.Namespace, "deployment.Name", deployment.Name)
+			deployment.ObjectMeta.SetNamespace(request.Namespace)
+			errDeployment = r.client.Create(context.TODO(), deployment)
+			if errDeployment != nil {
+				return reconcile.Result{}, errDeployment
+			}
+			// Pod created successfully - don't requeue
+			return reconcile.Result{}, nil
+		} else if errDeployment != nil {
+			return reconcile.Result{}, errDeployment
+		}
+		reqLogger.Info("Skip reconcile: deployment already exists", "Deployment.Namespace",
+		foundDeployment.Namespace, "svcacdeploymentcnt.Name", foundDeployment.Name)
+	`
+
+	if result != expected {
+		t.Fatalf("uexpected error; expected reconcile result got: %s", result)
 	}
 }

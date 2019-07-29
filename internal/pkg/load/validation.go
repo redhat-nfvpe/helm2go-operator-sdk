@@ -33,14 +33,12 @@ func PerformResourceValidation(rp string) (*validatemap.ValidateMap, error) {
 			if e := err.Error(); e == "deprecated" {
 				fmt.Printf("Resource: %v has a deprecated API version. Please enter 'continue' to proceed without this resource or 'stop' to exit the program: ", reflect.TypeOf(rconfig.r))
 				text, _ := reader.ReadString('\n')
-
 				if isStop(text) {
 					cleanUpAndExit()
 				}
 				if isContinue(text) {
 					addResourceToContinue(&validMap, f.Name())
 				}
-
 			} else if e == "unsupported" {
 
 				fmt.Printf("Resource: %v is unsupported. Please enter 'continue' to proceed without this resource, or 'stop' to exit the program: ", reflect.TypeOf(rconfig.r))
@@ -67,7 +65,7 @@ func isStop(text string) bool {
 }
 
 func isContinue(text string) bool {
-	return matchString(text, "continue")
+	return matchString(strings.ToLower(text), "continue")
 }
 
 func matchString(text string, contains string) bool {
@@ -93,6 +91,7 @@ func cleanUpAndExit() {
 }
 
 func addResourceToContinue(validMap *validatemap.ValidateMap, fileName string) {
+	// creates the map in the case that it does not exist
 	if len(validMap.Map) == 0 {
 		validMap.Map = make(map[string]bool)
 	}
