@@ -4,120 +4,138 @@ import (
 	"bytes"
 	"testing"
 	"text/template"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-func TestLowerCamel(t *testing.T) {
+func TestTemplating(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Templating")
+}
+
+var _ = Describe("LowerCamel", func() {
 	var input string
 	var expected string
 	var res string
 
-	input = "nginx"
-	expected = "nginx"
-	if res = kindToLowerCamel(input); res != expected {
-		t.Fatalf("expected %s got %s", expected, res)
-	}
+	BeforeEach(func() {
+		input = ""
+		expected = ""
+		res = ""
+	})
 
-	input = "TensorflowNotebook"
-	expected = "tensorflowNotebook"
-	if res = kindToLowerCamel(input); res != expected {
-		t.Fatalf("expected %s got %s", expected, res)
-	}
+	It("Does Not Change Already Lower Camel Strings", func() {
+		input = "nginx"
+		expected = "nginx"
+		res = kindToLowerCamel(input)
+		Expect(res).To(Equal(expected))
+	})
+	It("Changes Upper Camel Strings", func() {
+		input = "TensorflowNotebook"
+		expected = "tensorflowNotebook"
+		res = kindToLowerCamel(input)
+		Expect(res).To(Equal(expected))
 
-	input = "Tensorflow Notebook"
-	expected = "tensorflowNotebook"
-	if res = kindToLowerCamel(input); res != expected {
-		t.Fatalf("expected %s got %s", expected, res)
-	}
-}
+	})
+	It("Removes Strings", func() {
+		input = "Tensorflow Notebook"
+		expected = "tensorflowNotebook"
+		res = kindToLowerCamel(input)
+		Expect(res).To(Equal(expected))
+	})
+})
 
-func TestLower(t *testing.T) {
+var _ = Describe("Lower", func() {
 	var input string
 	var expected string
 	var res string
 
-	input = "nginx"
-	expected = "nginx"
-	if res = kindToLower(input); res != expected {
-		t.Fatalf("expected %s got %s", expected, res)
-	}
+	BeforeEach(func() {
+		input = ""
+		expected = ""
+		res = ""
+	})
 
-	input = "TensorflowNotebook"
-	expected = "tensorflownotebook"
-	if res = kindToLower(input); res != expected {
-		t.Fatalf("expected %s got %s", expected, res)
-	}
+	It("Does Not Change Lower Strings", func() {
+		input = "nginx"
+		expected = "nginx"
+		res = kindToLower(input)
+		Expect(res).To(Equal(expected))
+	})
+	It("Changes Upper Camel To Lower", func() {
+		input = "TensorflowNotebook"
+		expected = "tensorflownotebook"
+		res = kindToLower(input)
+		Expect(res).To(Equal(expected))
+	})
+	It("Removes Strings", func() {
+		input = "Tensorflow Notebook"
+		expected = "tensorflow notebook"
+		res = kindToLower(input)
+		Expect(res).To(Equal(expected))
+	})
+})
 
-	input = "Tensorflow Notebook"
-	expected = "tensorflow notebook"
-	if res = kindToLower(input); res != expected {
-		t.Fatalf("expected %s got %s", expected, res)
-	}
-}
-
-func TestGetOwnerAPIVersion(t *testing.T) {
+var _ = Describe("OwnerAPIVersion", func() {
 	var apiVersion string
 	var kind string
 	var res string
 
-	apiVersion = "web.example.com/v1"
-	kind = "nginx"
+	It("Gets The Correct API Version", func() {
+		apiVersion = "web.example.com/v1"
+		kind = "nginx"
+		res = getOwnerAPIVersion(apiVersion, kind)
+		Expect(res).To(Equal("nginxv1"))
 
-	if res = getOwnerAPIVersion(apiVersion, kind); res != "nginxv1" {
-		t.Fatalf("expected 'nginxv1' got %s", res)
-	}
+		apiVersion = "apps.example.com/v1alpha1"
+		kind = "TensorflowNotebook"
+		res = getOwnerAPIVersion(apiVersion, kind)
+		Expect(res).To(Equal("tensorflowNotebookv1alpha1"))
+	})
+})
 
-	apiVersion = "apps.example.com/v1alpha1"
-	kind = "TensorflowNotebook"
-
-	if res = getOwnerAPIVersion(apiVersion, kind); res != "tensorflowNotebookv1alpha1" {
-		t.Fatalf("expected 'tensorflowNotebookv1alpha1' got %s", res)
-	}
-
-}
-
-func TestGetImport(t *testing.T) {
+var _ = Describe("GetImport", func() {
 	var outputDir string
 	var apiVersion string
 	var result string
 	var expected string
 
-	outputDir = "/home/user/go/src/github.com/user/nginx-operator"
-	apiVersion = "web.example.com/v1alpha1"
-	expected = "github.com/user/nginx-operator/pkg/apis/web/v1alpha1"
-	result = getAppTypeImport(outputDir, apiVersion)
-	if result != expected {
-		t.Fatalf("expected %s got %s", expected, result)
-	}
-}
+	It("Gets The Right Import Statement", func() {
+		outputDir = "/home/user/go/src/github.com/user/nginx-operator"
+		apiVersion = "web.example.com/v1alpha1"
+		expected = "github.com/user/nginx-operator/pkg/apis/web/v1alpha1"
+		result = getAppTypeImport(outputDir, apiVersion)
+		Expect(result).To(Equal(expected))
+	})
+})
 
-func TestReconcileBlockRender(t *testing.T) {
+var _ = Describe("Reconcile Render", func() {
 	var result string
 	var expected string
 
-	reconcileConfig := ReconcileTemplateConfig{
-		Kind:                    "Memcached",
-		LowerKind:               "memcached",
-		ResourceImportPackage:   "appsv1",
-		ResourceType:            "Deployment",
-		ResourceName:            "Deployment",
-		LowerResourceName:       "deployment",
-		PluralLowerResourceName: "deployments",
-	}
+	It("Outputs The Correct Values", func() {
+		reconcileConfig := ReconcileTemplateConfig{
+			Kind:                    "Memcached",
+			LowerKind:               "memcached",
+			ResourceImportPackage:   "appsv1",
+			ResourceType:            "Deployment",
+			ResourceName:            "Deployment",
+			LowerResourceName:       "deployment",
+			PluralLowerResourceName: "deployments",
+		}
 
-	wr := bytes.Buffer{}
+		wr := bytes.Buffer{}
 
-	temp, err := template.New("controllerFuncTemplate").Parse(reconcileConfig.GetTemplate())
-	if err != nil {
-		t.Fatalf("unexpected error while loading reconcile block template: %v", err)
-	}
-	// execute the template
-	err = temp.Execute(&wr, reconcileConfig)
-	if err != nil {
-		t.Fatalf("unexpected error while rendering reconcile block template: %v", err)
-	}
-	result = wr.String()
-	// set the expected value
-	expected = `
+		temp, err := template.New("controllerFuncTemplate").Parse(reconcileConfig.GetTemplate())
+		Expect(err).ToNot(HaveOccurred())
+		// execute the template
+		err = temp.Execute(&wr, reconcileConfig)
+		Expect(err).ToNot(HaveOccurred())
+
+		result = wr.String()
+		// set the expected value
+		expected = `
 		deployment := deployments.NewDeploymentForCR(instance)
 		reqLogger.Info(deployment.String())
 		// Set Memcached instance as the owner and controller
@@ -143,7 +161,6 @@ func TestReconcileBlockRender(t *testing.T) {
 		foundDeployment.Namespace, "svcacdeploymentcnt.Name", foundDeployment.Name)
 	`
 
-	if result != expected {
-		t.Fatalf("uexpected error; expected reconcile result got: %s", result)
-	}
-}
+		Expect(result).To(Equal(expected))
+	})
+})

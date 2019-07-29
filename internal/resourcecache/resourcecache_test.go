@@ -5,18 +5,68 @@ import (
 	"strings"
 	"testing"
 
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const defaultkindtype = KindTypeConfigMap
 
-func TestZeroResourceCache(t *testing.T) {
-	resourceCache := NewResourceCache()
-	if size := resourceCache.Size(); size != 0 {
-		t.Errorf("wrong count of cache size , expected 0 and got %d", size)
-	}
+func TestResourceCache(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Resource Cache")
 }
+
+var _ = Describe("Resource Cache", func() {
+	var resourceCache *ResourceCache
+	It("Has Zero Size When Empty", func() {
+		resourceCache = NewResourceCache()
+		Expect(resourceCache.Size()).To(Equal(0))
+	})
+	It("Sets Correct Filename", func() {
+		filename := fmt.Sprintf("%s.go", strings.ToLower(string(defaultkindtype)))
+		resourceCache.SetResourceForKindType(defaultkindtype, PackageTypeConfigMaps)
+		Expect(resourceCache.GetResourceForKindType(defaultkindtype).FileName).To(Equal(filename))
+	})
+	It("Sets Correct Type", func() {
+		resourceCache := GetResourceCacheWithKindOne()
+		Expect(resourceCache.Size()).To(Equal(1))
+
+		resourceCache.SetResourceForKindType(defaultkindtype, PackageTypeConfigMaps)
+		configmapResource := resourceCache.GetResourceForKindType(defaultkindtype)
+		configmapResource.SetResourceFunctions("NewConfigMapForCR", getConfigMap())
+		_, ok := configmapResource.GetResourceFunctions()[0].Data.(*v1.ConfigMap)
+		Expect(ok).To(BeTrue())
+	})
+	It("Fails On Wrong Type", func() {
+		resourceCache := GetResourceCacheWithKindOne()
+		size := resourceCache.Size()
+		Expect(size).To(Equal(1))
+
+		resourceCache.SetResourceForKindType(defaultkindtype, PackageTypeConfigMaps)
+		configmapResource := resourceCache.GetResourceForKindType(defaultkindtype)
+		configmapResource.SetResourceFunctions("NewConfigMapForCR", getServiceAccount())
+
+		_, ok := configmapResource.GetResourceFunctions()[0].Data.(*v1.ConfigMap)
+		Expect(ok).To(BeFalse())
+	})
+})
+
+var _ = Describe("Filetype Extensions", func() {
+	It("Creates Go File Extension", func() {
+		typeString := "Role"
+		var n string
+		n = nameToFileName(typeString, FileExtensionGo)
+		Expect(n).To(Equal("role.go"))
+
+		typeString = "RoleBinding"
+		n = nameToFileName(typeString, FileExtensionGo)
+		Expect(n).To(Equal("roleBinding.go"))
+	})
+})
+
 func GetResourceCacheWithKindOne() *ResourceCache {
 	resourceCache := NewResourceCache()
 	resourceCache.SetKindType(KindTypeConfigMap)
@@ -54,65 +104,4 @@ func getServiceAccount() *v1.ServiceAccount {
 		},
 	}
 	return serviceaccount
-}
-
-// func TestOneResourceCache(t *testing.T) {
-// 	resourceCache := GetResourceConfigMapCacheWithKindOne()
-// 	if size := resourceCache.Size(); size != 1 {
-// 		t.Errorf("wrong count of cache size , expected 1 and got %d", size)
-// 	}
-// }
-
-func TestZeroResource(t *testing.T) {
-	resourceCache := GetResourceCacheWithKindOne()
-	if size := resourceCache.Size(); size != 1 {
-		t.Errorf("wrong count of cache size , expected 0 and got %d", size)
-	}
-	filename := fmt.Sprintf("%s.go", strings.ToLower(string(defaultkindtype)))
-	resourceCache.SetResourceForKindType(defaultkindtype, PackageTypeConfigMaps)
-
-	if resourceCache.GetResourceForKindType(defaultkindtype).FileName != filename {
-		t.Errorf("wrong filename  , expected %s and got %s", filename, resourceCache.GetResourceForKindType(defaultkindtype).FileName)
-	}
-}
-
-func TestDataInterfaceForCorrectType(t *testing.T) {
-	resourceCache := GetResourceCacheWithKindOne()
-	if size := resourceCache.Size(); size != 1 {
-		t.Errorf("wrong count of cache size , expected 0 and got %d", size)
-	}
-	resourceCache.SetResourceForKindType(defaultkindtype, PackageTypeConfigMaps)
-	configmapResource := resourceCache.GetResourceForKindType(defaultkindtype)
-
-	configmapResource.SetResourceFunctions("NewConfigMapForCR", getConfigMap())
-
-	if r, ok := configmapResource.GetResourceFunctions()[0].Data.(*v1.ConfigMap); !ok {
-		t.Errorf("wrong data type  , expected %T and got %T", configmapResource.GetResourceFunctions()[0].Data, r)
-	}
-}
-
-func TestDataInterfaceForWrongType(t *testing.T) {
-	resourceCache := GetResourceCacheWithKindOne()
-	if size := resourceCache.Size(); size != 1 {
-		t.Errorf("wrong count of cache size , expected 0 and got %d", size)
-	}
-	resourceCache.SetResourceForKindType(defaultkindtype, PackageTypeConfigMaps)
-	configmapResource := resourceCache.GetResourceForKindType(defaultkindtype)
-	configmapResource.SetResourceFunctions("NewConfigMapForCR", getServiceAccount())
-
-	if r, ok := configmapResource.GetResourceFunctions()[0].Data.(*v1.ConfigMap); ok {
-		t.Errorf("wrong data type  , expected %T and got %T", configmapResource.GetResourceFunctions()[0].Data, r)
-	}
-}
-
-func TestFileName(t *testing.T) {
-	typeString := "Role"
-	var n string
-	if n = nameToFileName(typeString, FileExtensionGo); n != "role.go" {
-		t.Errorf(`Expected "role.go", got: %v\n`, n)
-	}
-	typeString = "RoleBinding"
-	if n = nameToFileName(typeString, FileExtensionGo); n != "roleBinding.go" {
-		t.Errorf(`Expected "roleBinding.go, got: %v\n`, n)
-	}
 }
