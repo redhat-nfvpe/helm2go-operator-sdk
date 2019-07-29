@@ -3,45 +3,27 @@ module github.com/redhat-nfvpe/helm2go-operator-sdk
 go 1.12
 
 require (
-	github.com/BurntSushi/toml v0.3.1
-	github.com/Masterminds/goutils v1.1.0
-	github.com/Masterminds/semver v1.4.2
-	github.com/Masterminds/sprig v0.0.0-20190301161902-9f8fceff796f
-	github.com/cyphar/filepath-securejoin v0.2.2
-	github.com/ghodss/yaml v0.0.0-20180820084758-c7ce16629ff4
-	github.com/gobwas/glob v0.2.3
-	github.com/gogo/protobuf v1.0.0
-	github.com/golang/protobuf v1.2.0
-	github.com/google/gofuzz v1.0.0
-	github.com/google/uuid v1.1.1
-	github.com/huandu/xstrings v1.2.0
+	github.com/Masterminds/goutils v1.1.0 // indirect
+	github.com/Masterminds/semver v1.4.2 // indirect
+	github.com/Masterminds/sprig v0.0.0-20190301161902-9f8fceff796f // indirect
+	github.com/cyphar/filepath-securejoin v0.2.2 // indirect
+	github.com/ghodss/yaml v0.0.0-20180820084758-c7ce16629ff4 // indirect
+	github.com/gobwas/glob v0.2.3 // indirect
+	github.com/huandu/xstrings v1.2.0 // indirect
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
-	github.com/imdario/mergo v0.3.7
-	github.com/inconshreveable/mousetrap v1.0.0
-	github.com/json-iterator/go v1.1.6
-	github.com/mattn/go-colorable v0.1.2
-	github.com/mattn/go-isatty v0.0.8
-	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
-	github.com/modern-go/reflect2 v1.0.1
-	github.com/pkg/errors v0.8.0
+	github.com/imdario/mergo v0.3.7 // indirect
+	github.com/mattn/go-colorable v0.1.2 // indirect
+	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
+	github.com/onsi/ginkgo v1.8.0
+	github.com/onsi/gomega v1.5.0
+	github.com/pkg/errors v0.8.0 // indirect
 	github.com/spf13/cobra v0.0.5
-	github.com/spf13/pflag v1.0.3
 	github.com/tav/golly v0.0.0-20180823113506-ad032321f11e
-	golang.org/x/crypto v0.0.0-20190611184440-5c40567a22f8
-	golang.org/x/net v0.0.0-20190613194153-d28f0bde5980
-	golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7
-	golang.org/x/text v0.3.2
-	gopkg.in/inf.v0 v0.9.0
-	gopkg.in/yaml.v2 v2.2.2
+	golang.org/x/crypto v0.0.0-20190611184440-5c40567a22f8 // indirect
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
+	golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7 // indirect
 	k8s.io/api v0.0.0-20190712022805-31fe033ae6f9
 	k8s.io/apimachinery v0.0.0-20190711222657-391ed67afa7b
 	k8s.io/client-go v0.0.0-20190409021438-1a26190bd76a
-	k8s.io/code-generator v0.0.0-20190717022600-77f3a1fe56bb
-	k8s.io/gengo v0.0.0-20190327210449-e17681d19d3a
 	k8s.io/helm v2.14.2+incompatible
-	k8s.io/klog v0.3.1
-	k8s.io/kube-openapi v0.0.0-20190709113604-33be087ad058
-	sigs.k8s.io/controller-runtime v0.1.12
-	sigs.k8s.io/yaml v1.1.0
 )
