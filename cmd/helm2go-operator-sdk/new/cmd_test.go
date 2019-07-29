@@ -2,8 +2,6 @@ package new
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -19,13 +17,6 @@ import (
 var cwd, _ = os.Getwd()
 var parent = filepath.Dir(filepath.Dir(filepath.Dir(cwd)))
 
-func silencelog() {
-	log.SetOutput(ioutil.Discard)
-}
-func resetlog() {
-	log.SetOutput(os.Stdout)
-}
-
 func TestCommand(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Command")
@@ -40,6 +31,29 @@ var _ = Describe("Load Chart", func() {
 		err := chartClient.LoadChart()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(chartClient.Chart.GetMetadata().Name).To(Equal("bitcoind"))
+	})
+	It("Gets External Charts From Valid Repos", func() {
+		var client HelmChartClient
+
+		gopathDir := os.Getenv("GOPATH")
+		pathConfig := pathconfig.NewConfig(filepath.Join(gopathDir, "src/github.com/redhat-nfvpe/helm2go-operator-sdk"))
+		client.PathConfig = pathConfig
+
+		client.HelmChartRef = "auto-deploy-app"
+		client.HelmChartRepo = "https://charts.gitlab.io/"
+		err := client.LoadChart()
+		Expect(err).ToNot(HaveOccurred())
+
+		// cleanup auto-deploy-app
+
+		client.HelmChartRef = "not-a-chart"
+		client.HelmChartRepo = ""
+		err = client.LoadChart()
+		Expect(err).To(HaveOccurred())
+
+		client.HelmChartRepo = "invalidrepo.io"
+		err = client.LoadChart()
+		Expect(err).To(HaveOccurred())
 	})
 })
 
@@ -88,6 +102,52 @@ var _ = Describe("Flag Validation", func() {
 		err = verifyFlags()
 		Expect(err).ToNot(HaveOccurred())
 	})
+	It("Verifies API Version", func() {
+		var err error
+		helmChartRef = "./test/tomcat"
+		kind = "TensorflowNotebook"
+
+		apiVersion = "app.example.com/v1alpha1"
+		err = verifyFlags()
+		Expect(err).ToNot(HaveOccurred())
+
+		apiVersion = "web.k8s.io/v1"
+		err = verifyFlags()
+		Expect(err).ToNot(HaveOccurred())
+
+		apiVersion = "k8s.io"
+		err = verifyFlags()
+		Expect(err).To(HaveOccurred())
+
+		apiVersion = "app,s.k8s.io/v1beta1"
+		err = verifyFlags()
+		Expect(err).To(HaveOccurred())
+
+		apiVersion = "apps.example/v1beta1"
+		err = verifyFlags()
+		Expect(err).To(HaveOccurred())
+
+	})
+})
+
+var _ = Describe("Command Argument Validation", func() {
+	It("Fails On Invalid Arguments", func() {
+		var err error
+		err = createInvalidCommand().Execute()
+		Expect(err).To(HaveOccurred())
+
+		err = createInvalidOperatorName().Execute()
+		Expect(err).To(HaveOccurred())
+
+		err = createInvalidKindName().Execute()
+		Expect(err).To(HaveOccurred())
+	})
+	It("Passes On Valid Arguments", func() {
+		var err error
+		err = createValidCommand().Execute()
+		Expect(err).ToNot(HaveOccurred())
+		cleanupValidOperator()
+	})
 })
 
 //creates a command for use in the argument validation test
@@ -107,6 +167,12 @@ func createValidCommand() *cobra.Command {
 		fmt.Sprintf("--mock=%s", "true"),
 	})
 	return cmd
+}
+
+func cleanupValidOperator() {
+	gopathDir := os.Getenv("GOPATH")
+	operatorDir := filepath.Join(gopathDir, "src", "redhat-nfvpe", "helm2go-operator-sdk", "cmd", "helm2go-operator-sdk", "new", "test-operator")
+	os.RemoveAll(operatorDir)
 }
 
 // creates an invalid command for use in the argument validation test
@@ -160,98 +226,4 @@ func createInvalidKindName() *cobra.Command {
 		fmt.Sprintf("--kind=%s", "Nginx"),
 	})
 	return cmd
-}
-
-func TestInvalidCommandArgumentValidation(t *testing.T) {
-	var err error
-	silencelog()
-	if err = createInvalidCommand().Execute(); err == nil {
-		resetlog()
-		t.Logf("Error: %v", err)
-		t.Fatal("Expected Error! Command Has No Operator Name Argument.")
-		silencelog()
-	}
-	if err = createInvalidOperatorName().Execute(); err == nil {
-		resetlog()
-		t.Logf("Error: %v", err)
-		t.Fatal("Expected Error! Command Has Invalid(empty) Operator Name Argument.")
-		silencelog()
-	}
-	if err = createInvalidKindName().Execute(); err == nil {
-		resetlog()
-		t.Logf("Error: %v", err)
-		t.Fatal("Expected Error! Command Has Invalid(Has Space) API Version Argument.")
-		silencelog()
-	}
-
-}
-
-func TestValidCommandArgument(t *testing.T) {
-	defer os.RemoveAll("./test-operator")
-	if err := createValidCommand().Execute(); err != nil {
-		resetlog()
-		t.Logf("Error: %v", err)
-		os.RemoveAll("./test-operator")
-		t.Fatal("Unexpected Error! Provided Correct Arguments and Flags.")
-		silencelog()
-	}
-
-}
-
-// clean up
-
-func TestHelmChartDownload(t *testing.T) {
-	var client HelmChartClient
-
-	gopathDir := os.Getenv("GOPATH")
-	pathConfig := pathconfig.NewConfig(filepath.Join(gopathDir, "src/github.com/redhat-nfvpe/helm2go-operator-sdk"))
-	client.PathConfig = pathConfig
-
-	// defer func() {
-	// 	if r := recover(); r != nil {
-	// 		fmt.Printf("Panic: %+v\n", r)
-	// 	}
-	// }()
-
-	client.HelmChartRef = "auto-deploy-app"
-	client.HelmChartRepo = "https://charts.gitlab.io/"
-	err := client.LoadChart()
-	if err != nil {
-		resetlog()
-		t.Fatalf("Unexpected Error: %v\n", err)
-		silencelog()
-	}
-
-	client.HelmChartRef = "not-a-chart"
-	client.HelmChartRepo = ""
-	err = client.LoadChart()
-	if err == nil {
-		resetlog()
-		t.Fatalf("Expected Error Chart Does Not Exist!")
-		silencelog()
-	}
-
-	client.HelmChartRepo = "invalidrepo.io"
-	err = client.LoadChart()
-	if err == nil {
-		resetlog()
-		t.Fatalf("Expected Error Invalid Repo!")
-		silencelog()
-	}
-}
-
-func TestAPINamingConventionValidation(t *testing.T) {
-	testCases := map[string]bool{
-		"app.example.com/v1alpha1": true,
-		"web.k8s.io/v1":            true,
-		"k8s.io":                   false,
-		"app,s.k8s.io/v1beta1":     false,
-		"apps.example/v1beta1":     false,
-	}
-
-	for v, ok := range testCases {
-		if m := apiVersionMatchesConvention(v); m != ok {
-			t.Fatalf("error validating: %v; expected %v got %v", v, ok, m)
-		}
-	}
 }
