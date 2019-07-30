@@ -1,0 +1,7 @@
+--- 
+outer: 
+  fieldOne: docker.io
+  inner: 
+    anotherOne: 
+      fieldThree: google.com
+    fieldTwo: again.com

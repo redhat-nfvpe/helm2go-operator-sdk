@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/go-openapi/inflect"
 	"github.com/iancoleman/strcase"
 
 	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/resourcecache"
@@ -159,12 +160,13 @@ func getImportMap(outputDir, kind, apiVersion string) map[string]string {
 }
 
 func getAppTypeImport(outputDir, apiVersion string) string {
-	comps, err := getAPIVersionComponents(apiVersion)
+	var comps []string
+	components, err := getAPIVersionComponents(apiVersion)
 	if err != nil {
 		panic(err)
 	}
 	sp := strings.Split(outputDir, "src/")
-	comps = append([]string{sp[len(sp)-1], "pkg", "apis"}, comps...)
+	comps = append([]string{sp[len(sp)-1], "pkg", "apis"}, components.Subdomain, components.Version)
 
 	return filepath.Join(comps...)
 
@@ -181,26 +183,52 @@ func getResourceCRImport(outputDir, resourceType string) string {
 	return importString
 }
 
-func getAPIVersionComponents(input string) ([]string, error) {
+// APIComponents used to seperate api components
+type APIComponents struct {
+	Subdomain string
+	Domain    string
+	Version   string
+}
 
-	var group string
-	var version string
-
-	fmt.Printf("Input: %v", input)
+func getAPIVersionComponents(input string) (*APIComponents, error) {
 
 	// matches the input string and returns the groups
 	pattern := regexp.MustCompile(`(.*)\.(.*)\..*\/(.*)`)
 	matches := pattern.FindStringSubmatch(input)
 	if l := len(matches); l != 3+1 {
-		return []string{}, fmt.Errorf("expected four matches, received %d instead", l)
+		return nil, fmt.Errorf("expected four matches, received %d instead", l)
 	}
-	group = matches[1]
-	version = matches[3]
 
-	var result = []string{
-		group,
-		version,
+	var result = &APIComponents{
+		matches[1],
+		matches[2],
+		matches[3],
 	}
 
 	return result, nil
+}
+
+func getKindSpecName(kind string) string {
+	return kind + "Spec"
+}
+
+func getKindSpecTypeName(kind string) string {
+	return kind + "Spec" + "Type"
+}
+
+func getLowerPlural(kind string) string {
+	return inflect.Pluralize(inflect.CamelizeDownFirst(kind))
+}
+
+func getSpecifiedOrDefault(attribute string, values map[string]string) string {
+	// check if attribute is in the map
+	val, ok := values[attribute]
+	if !ok {
+		return getDefault(attribute)
+	}
+	return val
+}
+
+func getDefault(attribute string) string {
+	return "placeholder"
 }

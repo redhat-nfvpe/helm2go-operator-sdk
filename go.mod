@@ -8,6 +8,7 @@ require (
 	github.com/Masterminds/sprig v0.0.0-20190301161902-9f8fceff796f // indirect
 	github.com/cyphar/filepath-securejoin v0.2.2 // indirect
 	github.com/ghodss/yaml v0.0.0-20180820084758-c7ce16629ff4 // indirect
+	github.com/go-openapi/inflect v0.19.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/huandu/xstrings v1.2.0 // indirect
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365

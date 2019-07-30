@@ -149,7 +149,12 @@ func scaffoldOverwrite(outputDir, kind, apiVersion string, rcache *resourcecache
 	ok = templating.ResourceFileStructure(rcache, resDir)
 	ok = templating.TemplatesToFiles(templates, resDir)
 	if !ok {
-		return fmt.Errorf("Writing to File Error")
+		return fmt.Errorf("error writing to file")
 	}
-	return nil
+
+	//begin overwritting the types file
+	ok = templating.OverwriteKindTypes(outputDir, kind, apiVersion)
+	if !ok {
+		return fmt.Errorf("error overwriting kind types")
+	}
 }

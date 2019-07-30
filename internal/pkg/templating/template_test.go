@@ -2,6 +2,8 @@ package templating
 
 import (
 	"bytes"
+	"fmt"
+	"path/filepath"
 	"testing"
 	"text/template"
 
@@ -106,6 +108,7 @@ var _ = Describe("GetImport", func() {
 		apiVersion = "web.example.com/v1alpha1"
 		expected = "github.com/user/nginx-operator/pkg/apis/web/v1alpha1"
 		result = getAppTypeImport(outputDir, apiVersion)
+		fmt.Println(result)
 		Expect(result).To(Equal(expected))
 	})
 })
@@ -162,5 +165,21 @@ var _ = Describe("Reconcile Render", func() {
 	`
 
 		Expect(result).To(Equal(expected))
+	})
+})
+
+func TestOverwriteTypes(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Test Overwrite")
+}
+
+var _ = Describe("Kind Types Templating", func() {
+	It("Overwrites types.go", func() {
+		operatorPath := "/home/sjakati/go/src/github.com/sjakati98/memcached-operator"
+		valuesPath := filepath.Join("/home/sjakati/Desktop", "charts", "bitnami", "memcached", "values.yaml")
+		ok := OverwriteKindTypes(operatorPath, valuesPath, "Memcached", "app.example.com/v1alpha1")
+		if !ok {
+			Fail("not ok")
+		}
 	})
 })
