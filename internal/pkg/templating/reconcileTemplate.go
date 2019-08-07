@@ -79,5 +79,36 @@ func (r *ReconcileTemplateConfig) GetTemplate() string {
 		}
 		reqLogger.Info("Skip reconcile: {{.LowerResourceName}} already exists", "{{.ResourceName}}.Namespace",
 		found{{.ResourceName}}.Namespace, "svcac{{.LowerResourceName}}cnt.Name", found{{.ResourceName}}.Name)
+
+		
+		if func(instance &{{ .OwnerAPIVersion }}.{{ .Kind }}{}, object &{{.ResourceImportPackage}}.{{.ResourceType}}{}) bool {
+			
+			var instanceMap map[string]interface{}
+			var objectMap map[string]interface{}
+
+			instanceBytes, _ := json.Marshal(instance)
+			objectBytes, _ := json.Marshal(object)
+
+			_ = json.Unmarshal(instanceBytes, instanceMap)
+			_ = json.Unmarshal(objectBytes, objectMap)
+
+			for objectSpecKey, objectSpec := range objectMap {
+				instanceSpec, ok := instanceMap[objectSpecKey]
+				if ok {
+					if objectSpec != instanceSpec {
+						return true
+					}
+				}
+			}
+
+			return false
+
+
+
+		}(instance, found{{.ResourceName}}) {
+			client.Update(found{{.ResourceName}})
+			return reconcile.Result{}, nil
+		}
+
 	`
 }
