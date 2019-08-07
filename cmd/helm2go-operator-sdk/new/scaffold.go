@@ -8,6 +8,9 @@ import (
 )
 
 func doGoScaffold() error {
+	// for testing purposes
+	fmt.Printf("What is mock")
+	fmt.Print(mock)
 	if mock {
 		return nil
 	}

@@ -38,7 +38,9 @@ type HelmChartClient struct {
 
 //NewChartClient creates a new chart client
 func NewChartClient() *HelmChartClient {
-	return &HelmChartClient{}
+	client := HelmChartClient{}
+	client.PathConfig, _ = GetBasePathConfig()
+	return &client
 }
 
 // SetValues ingests alle the necessary values for the client
@@ -53,7 +55,7 @@ func (hc *HelmChartClient) SetValues(helmChartRef, helmChartVersion, helmChartRe
 	hc.HelmChartKeyFile = helmChartKeyFile
 }
 
-//LoadChart ...
+//LoadChart uses the chart client's values to retreive the appropriate chart
 func (hc *HelmChartClient) LoadChart() error {
 	var chartPath string
 	chartPath = hc.HelmChartRef
@@ -112,9 +114,9 @@ func (hc *HelmChartClient) DoHelmGoConversion() (*resourcecache.ResourceCache, e
 		return nil, fmt.Errorf("error injecting template values: %v", err)
 	}
 	// write the rendered charts to output directory
-	d := hc.PathConfig.GetBasePath()
-	fmt.Printf("PATH CONFIG BASE: %s\n", d)
-	temp, err := render.InjectedToTemp(f, d)
+	basePath := hc.PathConfig.GetBasePath()
+
+	temp, err := render.InjectedToTemp(f, basePath)
 	if err != nil {
 		return nil, fmt.Errorf("error writing template values to temp files: %v", err)
 	}
@@ -140,19 +142,21 @@ func (hc *HelmChartClient) DoHelmGoConversion() (*resourcecache.ResourceCache, e
 
 func scaffoldOverwrite(outputDir, kind, apiVersion string, rcache *resourcecache.ResourceCache) error {
 
-	ok := templating.OverwriteController(outputDir, kind, apiVersion, rcache)
-	if !ok {
-		fmt.Println(ok)
+	if err := templating.OverwriteController(outputDir, kind, apiVersion, rcache); err != nil {
+		return fmt.Errorf("error while overwriting controller: %v", err)
 	}
 	// create templates for writing to file
 	templates := templating.CacheTemplating(rcache, outputDir, kind, apiVersion)
 	// templates to files; outputDir is the parent directory where the operator scaffolding lives
 	resDir := filepath.Join(outputDir, "pkg", "resources")
+
 	// create the necessary package resource specific folders
-	ok = templating.ResourceFileStructure(rcache, resDir)
-	ok = templating.TemplatesToFiles(templates, resDir)
-	if !ok {
-		return fmt.Errorf("Writing to File Error")
+	if err := templating.ResourceFileStructure(rcache, resDir); err != nil {
+		return fmt.Errorf("error creating resource file structure: %v", err)
 	}
+	if err := templating.TemplatesToFiles(templates, resDir); err != nil {
+		return fmt.Errorf("error writing to template: %v", err)
+	}
+
 	return nil
 }
