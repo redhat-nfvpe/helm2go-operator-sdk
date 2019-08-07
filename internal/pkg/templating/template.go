@@ -13,32 +13,31 @@ import (
 
 // CacheTemplating takes a resource cache and renders its respective template values
 func CacheTemplating(rcache *resourcecache.ResourceCache, outputDir, kind, apiVersion string) map[string]string {
-	var t map[string]string
-	t = make(map[string]string)
-	c := rcache.PrepareCacheForFile()
+	var templates map[string]string
+	templates = make(map[string]string)
+	cache := rcache.PrepareCacheForFile()
 
-	for kt, r := range c {
+	for kindType, resource := range cache {
 		// TODO need to remove the hardcoded first resourcefunction
-		kt = filepath.Join(filepath.Dir(kt), r.PackageName.String(), filepath.Base(kt))
-		bytes, err := json.MarshalIndent(r.GetResourceFunctions()[0].Data, "", "\t")
+		kindType = filepath.Join(filepath.Dir(kindType), resource.PackageName.String(), filepath.Base(kindType))
+		bytes, err := json.MarshalIndent(resource.GetResourceFunctions()[0].Data, "", "\t")
 		if err != nil {
 			_ = fmt.Errorf("%v", err)
 		}
-		conf := NewResourceTemplateConfig(outputDir, apiVersion, kind, r, bytes)
+		conf := NewResourceTemplateConfig(outputDir, apiVersion, kind, resource, bytes)
 		tmpl, err := conf.Execute()
-		t[string(kt)] = tmpl
+		templates[string(kindType)] = tmpl
 	}
 
-	return t
+	return templates
 }
 
 // TemplatesToFiles takes the templated files and writes them to strings in the specified directory
-func TemplatesToFiles(templates map[string]string, outputDir string) bool {
+func TemplatesToFiles(templates map[string]string, outputDir string) error {
 	if _, err := os.Stat(outputDir); os.IsNotExist(err) {
 		err = os.MkdirAll(outputDir, 0700)
 		if err != nil {
-			fmt.Println(err)
-			return false
+			return err
 		}
 	}
 
@@ -46,22 +45,20 @@ func TemplatesToFiles(templates map[string]string, outputDir string) bool {
 		// create the file to be written to
 		f, err := os.Create(filepath.Join(outputDir, filename))
 		if err != nil {
-			fmt.Println(err)
-			return false
+			return err
 		}
 		// write the file content to the actual file
 		_, err = f.WriteString(file)
 		if err != nil {
-			fmt.Println(err)
-			return false
+			return err
 		}
 		f.Close()
 	}
-	return true
+	return nil
 }
 
 // ResourceFileStructure creates the correct file structure based on the spcified kind types
-func ResourceFileStructure(rcache *resourcecache.ResourceCache, outputDir string) bool {
+func ResourceFileStructure(rcache *resourcecache.ResourceCache, outputDir string) error {
 	// iterate through the kind types
 	for _, r := range *rcache.GetCache() {
 		// create the neccessary folder for the kind type
@@ -69,16 +66,15 @@ func ResourceFileStructure(rcache *resourcecache.ResourceCache, outputDir string
 		if _, err := os.Stat(newOutput); os.IsNotExist(err) {
 			err = os.MkdirAll(newOutput, 0700)
 			if err != nil {
-				fmt.Println(err)
-				return false
+				return err
 			}
 		}
 	}
-	return true
+	return nil
 }
 
 // OverwriteController takes in a templated file and writes it over the original controller file
-func OverwriteController(outputDir, kind, apiVersion string, rcache *resourcecache.ResourceCache) bool {
+func OverwriteController(outputDir, kind, apiVersion string, rcache *resourcecache.ResourceCache) error {
 
 	var watchFuncs []string
 	var reconcileBlocks []string
@@ -89,15 +85,14 @@ func OverwriteController(outputDir, kind, apiVersion string, rcache *resourcecac
 	ownerAPIVersion := getOwnerAPIVersion(apiVersion, kind)
 	lowerKind := kindToLowerCamel(kind)
 
-	for _, r := range rcache.PrepareCacheForFile() {
+	for _, resource := range rcache.PrepareCacheForFile() {
 
-		resourceControllerImports[getResourceCRImport(outputDir, strings.ToLower(getTemplateResourceTitle(&r.GetResourceFunctions()[0].Data)))] = ""
-		w := NewControllerWatchFuncConfig(apiVersion, ownerAPIVersion, kind, lowerKind, r)
+		resourceControllerImports[getResourceCRImport(outputDir, strings.ToLower(getTemplateResourceTitle(&resource.GetResourceFunctions()[0].Data)))] = ""
+		watchFunctionConfig := NewControllerWatchFuncConfig(apiVersion, ownerAPIVersion, kind, lowerKind, resource)
 
-		tmpl, err := w.Execute()
+		tmpl, err := watchFunctionConfig.Execute()
 		if err != nil {
-			log.Println(err)
-			return false
+			return err
 		}
 
 		watchFuncs = append(watchFuncs, tmpl)
@@ -107,44 +102,44 @@ func OverwriteController(outputDir, kind, apiVersion string, rcache *resourcecac
 
 	// for resourcetype in lookup
 	for _, kindtype := range resourcecache.KindTypeLookup {
+		// get resource of kindType
 		if r, ok := cacheToLookup[kindtype]; ok {
+			// create reconcile block template
 			reconcileConfig := NewReconcileTemplateConfig(kind, lowerKind, r)
 			temp, err := reconcileConfig.Execute()
 			if err != nil {
-				log.Println(err)
-				return false
+				return err
 			}
 			reconcileBlocks = append(reconcileBlocks, temp)
 		}
 	}
 
+	// get map of appropriate imports for controller file
 	importMap := getImportMap(outputDir, kind, apiVersion)
 	for k, v := range resourceControllerImports {
 		importMap[k] = v
 	}
-	c := NewControllerTemplateConfig(kind, lowerKind, ownerAPIVersion, importMap, watchFuncs, reconcileBlocks)
+	controllerConfig := NewControllerTemplateConfig(kind, lowerKind, ownerAPIVersion, importMap, watchFuncs, reconcileBlocks)
 
-	tmpl, err := c.Execute()
+	tmpl, err := controllerConfig.Execute()
 
 	// overwrite original file
 	outFile := filepath.Join(outputDir, "pkg", "controller", kindToLower(kind), fmt.Sprintf("%s_controller.go", kindToLower(kind)))
 
-	f, err := os.OpenFile(outFile, os.O_WRONLY, 0600)
-	if err != nil {
-		log.Println(err)
-		return false
+	var f *os.File
+	if f, err = os.OpenFile(outFile, os.O_WRONLY, 0600); err != nil {
+		return err
 	}
 	// delete original content
 	f.Truncate(0)
 
 	defer f.Close()
 
-	n, err := f.WriteString(tmpl)
+	numBytes, err := f.WriteString(tmpl)
 	if err != nil {
-		log.Printf("Unexpected Error When Writing To File: %v", err)
-		return false
+		return err
 	}
-	log.Printf("Wrote %d Bytes!", n)
-	return true
+	log.Printf("Wrote %d Bytes!", numBytes)
+	return nil
 
 }

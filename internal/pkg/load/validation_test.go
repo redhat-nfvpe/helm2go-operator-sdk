@@ -1,6 +1,8 @@
 package load
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -14,7 +16,8 @@ func TestValidation(t *testing.T) {
 
 var _ = Describe("Resource Validation", func() {
 	It("Validates Resources", func() {
-		_, err := PerformResourceValidation("/home/sjakati/go/src/github.com/redhat-nfvpe/helm2go-operator-sdk/test/resources")
+		gopath := os.Getenv("GOPATH")
+		_, err := PerformResourceValidation(filepath.Join(gopath, "/src/github.com/redhat-nfvpe/helm2go-operator-sdk/test/resources"))
 		Expect(err).ToNot(HaveOccurred())
 	})
 })

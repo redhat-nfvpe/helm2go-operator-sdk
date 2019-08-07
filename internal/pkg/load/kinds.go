@@ -10,26 +10,16 @@ import (
 var AcceptedK8sTypes = regexp.MustCompile(`(Role|ClusterRole|RoleBinding|ClusterRoleBinding|ServiceAccount|Service|Deployment)`)
 
 type resourceConfig struct {
-	r  interface{}
-	kt resourcecache.KindType
-	pt resourcecache.PackageType
+	resource    interface{}
+	kindType    resourcecache.KindType
+	packageType resourcecache.PackageType
 }
 
 func (rc *resourceConfig) toResourceCache() *resourcecache.Resource {
-	var r resourcecache.Resource
+	var resource resourcecache.Resource
 
-	r.PackageName = rc.pt
-	r.FileName = string(rc.kt)
+	resource.PackageName = rc.packageType
+	resource.FileName = string(rc.kindType)
 
-	// put things into resourcecache format
-
-	return &r
+	return &resource
 }
-
-// func getKindType(kind string) *resourcecache.KindType {
-// 	var kt resourcecache.KindType
-// 	switch kind {
-// 	case resourcecache.KindTypeConfigMap.(string):
-// 		kt =
-// 	}
-// }
