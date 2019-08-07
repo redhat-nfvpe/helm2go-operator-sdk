@@ -13,42 +13,40 @@ import (
 	"github.com/redhat-nfvpe/helm2go-operator-sdk/internal/validatemap"
 )
 
-var cd string
-
 // PerformResourceValidation validates templated resources to identify deprecated API versions
-func PerformResourceValidation(rp string) (*validatemap.ValidateMap, error) {
-	cd = rp
+func PerformResourceValidation(resourcesPath string) (*validatemap.ValidateMap, error) {
 	// collect all templated files in directory
-	files, err := ioutil.ReadDir(rp)
+	// TODO: need to test with nested templates
+	files, err := ioutil.ReadDir(resourcesPath)
 	if err != nil {
-		return nil, fmt.Errorf("error reading files in directory %s: %v", rp, err)
+		return nil, fmt.Errorf("error reading files in directory %s: %v", resourcesPath, err)
 	}
 
 	var validMap validatemap.ValidateMap
 
-	for _, f := range files {
-		rconfig, err := yamlUnmarshalSingleResource(filepath.Join(rp, f.Name()))
+	for _, file := range files {
+		rconfig, err := yamlUnmarshalSingleResource(filepath.Join(resourcesPath, file.Name()))
 		if err != nil {
 			reader := bufio.NewReader(os.Stdin)
 			if e := err.Error(); e == "deprecated" {
-				fmt.Printf("Resource: %v has a deprecated API version. Please enter 'continue' to proceed without this resource or 'stop' to exit the program: ", reflect.TypeOf(rconfig.r))
+				fmt.Printf("Resource: %v has a deprecated API version. Please enter 'continue' to proceed without this resource or 'stop' to exit the program: ", reflect.TypeOf(rconfig.resource))
 				text, _ := reader.ReadString('\n')
 				if isStop(text) {
-					cleanUpAndExit()
+					cleanUpAndExit(resourcesPath)
 				}
 				if isContinue(text) {
-					addResourceToContinue(&validMap, f.Name())
+					addResourceToContinue(&validMap, file.Name())
 				}
 			} else if e == "unsupported" {
 
-				fmt.Printf("Resource: %v is unsupported. Please enter 'continue' to proceed without this resource, or 'stop' to exit the program: ", reflect.TypeOf(rconfig.r))
+				fmt.Printf("Resource: %v is unsupported. Please enter 'continue' to proceed without this resource, or 'stop' to exit the program: ", reflect.TypeOf(rconfig.resource))
 				text, _ := reader.ReadString('\n')
 
 				if isStop(text) {
-					cleanUpAndExit()
+					cleanUpAndExit(resourcesPath)
 				}
 				if isContinue(text) {
-					addResourceToContinue(&validMap, f.Name())
+					addResourceToContinue(&validMap, file.Name())
 				}
 			} else if e == "not yaml" || e == "empty" {
 				continue
@@ -72,11 +70,11 @@ func matchString(text string, contains string) bool {
 	return strings.Contains(text, contains)
 }
 
-func cleanUpAndExit() {
+func cleanUpAndExit(resourcesPath string) {
 	// log exit begin
 	log.Println("Cleanup Temp Started")
 	// clean up temp folder
-	temp := filepath.Dir(filepath.Dir(cd))
+	temp := filepath.Dir(filepath.Dir(resourcesPath))
 	err := os.RemoveAll(temp)
 	if err != nil {
 		log.Printf("Error While Cleaning Up Temp: %v", err)

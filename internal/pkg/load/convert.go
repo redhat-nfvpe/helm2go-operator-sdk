@@ -19,10 +19,10 @@ import (
 
 // YAMLUnmarshalResources converts a directory of injected YAML files to Kubernetes resources; resouresPath is assumed to be an absolute path
 // if conversion of any resource fails method will panic; adds resources to resource cache
-func YAMLUnmarshalResources(rp string, validMap *validatemap.ValidateMap, rc *resourcecache.ResourceCache) (*resourcecache.ResourceCache, error) {
+func YAMLUnmarshalResources(resourcesPath string, validMap *validatemap.ValidateMap, resourceCache *resourcecache.ResourceCache) (*resourcecache.ResourceCache, error) {
 
 	// TODO convert all the files in a directory
-	files, err := ioutil.ReadDir(rp)
+	files, err := ioutil.ReadDir(resourcesPath)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func YAMLUnmarshalResources(rp string, validMap *validatemap.ValidateMap, rc *re
 			continue
 		}
 
-		file := filepath.Join(rp, f.Name())
+		file := filepath.Join(resourcesPath, f.Name())
 		// obtain the converted result resourceKind
 		rconfig, err := yamlUnmarshalSingleResource(file)
 		if err != nil {
@@ -43,7 +43,7 @@ func YAMLUnmarshalResources(rp string, validMap *validatemap.ValidateMap, rc *re
 			} else if err.Error() == "not yaml" {
 				continue
 			} else if err.Error() == "unknown type" {
-				return nil, fmt.Errorf("resource: %v is of unknown type", rconfig.r)
+				return nil, fmt.Errorf("resource: %v is of unknown type", rconfig.resource)
 			} else if err.Error() == "deprecated" {
 				log.Printf("%s contains deprecated api version; exiting", f.Name())
 				os.Exit(1)
@@ -56,13 +56,13 @@ func YAMLUnmarshalResources(rp string, validMap *validatemap.ValidateMap, rc *re
 		}
 		// add resource to cache
 		// initializes the kind type
-		rc.SetKindType(rconfig.kt)
+		resourceCache.SetKindType(rconfig.kindType)
 		// set the correct cache information
-		rc.SetResourceForKindType(rconfig.kt, rconfig.pt)
-		rs := rc.GetResourceForKindType(rconfig.kt)
-		rs.SetResourceFunctions(string(rconfig.kt), rconfig.r)
+		resourceCache.SetResourceForKindType(rconfig.kindType, rconfig.packageType)
+		rs := resourceCache.GetResourceForKindType(rconfig.kindType)
+		rs.SetResourceFunctions(string(rconfig.kindType), rconfig.resource)
 	}
-	return rc, nil
+	return resourceCache, nil
 }
 
 // yamlUnmarshalSingleResource converts injected YAML files to a Kubernetes resource; rp is assumed to be an absolute path

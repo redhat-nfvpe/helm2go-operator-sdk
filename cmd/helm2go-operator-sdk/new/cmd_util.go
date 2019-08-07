@@ -41,11 +41,11 @@ func verifyFlags() error {
 
 func parse(args []string) error {
 	if len(args) != 1 {
-		return fmt.Errorf("Please Specify Operator Name")
+		return fmt.Errorf("please specify operator name")
 	}
 	operatorName = args[0]
 	if len(operatorName) == 0 {
-		return fmt.Errorf("Project Name Must Not Be Empty")
+		return fmt.Errorf("operator name should not be empty")
 	}
 	return nil
 }
