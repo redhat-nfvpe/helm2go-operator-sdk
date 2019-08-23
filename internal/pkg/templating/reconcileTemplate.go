@@ -80,9 +80,14 @@ func (r *ReconcileTemplateConfig) GetTemplate() string {
 		reqLogger.Info("Skip reconcile: {{.LowerResourceName}} already exists", "{{.ResourceName}}.Namespace",
 		found{{.ResourceName}}.Namespace, "svcac{{.LowerResourceName}}cnt.Name", found{{.ResourceName}}.Name)
 
-		
 		if func(instance &{{ .OwnerAPIVersion }}.{{ .Kind }}{}, object &{{.ResourceImportPackage}}.{{.ResourceType}}{}) bool {
 			
+			// EDIT THIS FILE! tHIS IS SCAFFOLDING FOR YOU TO OWN!
+			// The following commented code checks the difference between the 
+			// {{ .OwnerAPIVersion }}.{{ .Kind }} instance and the current {{ .ResourceName }} instance.
+			// When implementing, you should specify the update conditions.
+			
+			/*
 			var instanceMap map[string]interface{}
 			var objectMap map[string]interface{}
 
@@ -100,15 +105,14 @@ func (r *ReconcileTemplateConfig) GetTemplate() string {
 					}
 				}
 			}
-
+			*/
 			return false
-
-
-
 		}(instance, found{{.ResourceName}}) {
-			client.Update(found{{.ResourceName}})
-			return reconcile.Result{}, nil
-		}
+			
+			// The following commented code updates the kubeclient
 
+			// client.Update(found{{.ResourceName}})
+			// return reconcile.Result{}, nil
+		}
 	`
 }

@@ -143,3 +143,55 @@ func OverwriteController(outputDir, kind, apiVersion string, rcache *resourcecac
 	return nil
 
 }
+
+// OverwriteKindTypes writes over the original types file
+func OverwriteKindTypes(outputDir, valuesPath, kind, apiVersion string) bool {
+
+	var err error
+	kindSpecName := getKindSpecName(kind)
+	// create the appropriate specification
+	sc := NewSpecConfig(kindSpecName, valuesPath)
+	tmpl, err := sc.Execute()
+
+	if err != nil {
+		log.Printf("error executing spec template: %v", err)
+		return false
+	}
+
+	// create the types scaffold
+	kc := NewKindTypesTemplateConfig(kind, apiVersion, tmpl)
+	tmpl, err = kc.Execute()
+	if err != nil {
+		log.Printf("error executing kind types template: %v", err)
+		return false
+	}
+
+	components, err := getAPIVersionComponents(apiVersion)
+
+	outFile := filepath.Join(outputDir, "pkg", "apis", components.Subdomain, components.Version, fmt.Sprintf("%v_types.go", kindToLower(kind)))
+
+	f, err := os.OpenFile(outFile, os.O_WRONLY, 0600)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	// delete original content
+	f.Truncate(0)
+
+	defer f.Close()
+
+	n, err := f.WriteString(tmpl)
+	if err != nil {
+		log.Printf("Unexpected Error When Writing To File: %v", err)
+		return false
+	}
+	log.Printf("Wrote %d Bytes!", n)
+	return true
+}
+
+func getGroupPath(apiVersion string) string {
+	components, _ := getAPIVersionComponents(apiVersion)
+	// returns the subdomain and domain of the api version
+	// eg. app.example.com/v1 --> app/example
+	return filepath.Join(components.Subdomain, components.Domain)
+}

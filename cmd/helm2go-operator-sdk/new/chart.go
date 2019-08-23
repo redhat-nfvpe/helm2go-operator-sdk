@@ -34,6 +34,7 @@ type HelmChartClient struct {
 	Chart             *chart.Chart
 	ChartName         string
 	PathConfig        *pathconfig.PathConfig
+	ChartPath         string
 }
 
 //NewChartClient creates a new chart client
@@ -95,6 +96,7 @@ func (hc *HelmChartClient) LoadChart() error {
 		chartPath = filepath.Join(hc.PathConfig.GetBasePath(), chartPath)
 	}
 
+	hc.ChartPath = chartPath
 	loadedChart, err := chartutil.Load(chartPath)
 	if err != nil {
 		return err
@@ -140,11 +142,17 @@ func (hc *HelmChartClient) DoHelmGoConversion() (*resourcecache.ResourceCache, e
 	return rcache, nil
 }
 
-func scaffoldOverwrite(outputDir, kind, apiVersion string, rcache *resourcecache.ResourceCache) error {
+func scaffoldOverwrite(outputDir, kind, apiVersion, valsPath string, rcache *resourcecache.ResourceCache) error {
 
 	if err := templating.OverwriteController(outputDir, kind, apiVersion, rcache); err != nil {
 		return fmt.Errorf("error while overwriting controller: %v", err)
 	}
+
+	ok := templating.OverwriteCR(outputDir, kind, apiVersion, valsPath)
+	if !ok {
+		return fmt.Errorf("error overwriting CR")
+	}
+
 	// create templates for writing to file
 	templates := templating.CacheTemplating(rcache, outputDir, kind, apiVersion)
 	// templates to files; outputDir is the parent directory where the operator scaffolding lives
@@ -156,6 +164,11 @@ func scaffoldOverwrite(outputDir, kind, apiVersion string, rcache *resourcecache
 	}
 	if err := templating.TemplatesToFiles(templates, resDir); err != nil {
 		return fmt.Errorf("error writing to template: %v", err)
+	}
+
+	ok = templating.OverwriteKindTypes(outputDir, valsPath, kind, apiVersion)
+	if !ok {
+		return fmt.Errorf("error overwriting kind types")
 	}
 
 	return nil

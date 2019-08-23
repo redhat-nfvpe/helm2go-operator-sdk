@@ -103,7 +103,8 @@ func newFunc(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = scaffoldOverwrite(outputDir, kind, apiVersion, rcache)
+	valsPath := filepath.Join(chartClient.ChartPath, "values.yaml")
+	err = scaffoldOverwrite(outputDir, kind, apiVersion, valsPath, rcache)
 	if err != nil {
 		log.Error("error overwritting scaffold: ", err)
 		return err
