@@ -81,11 +81,12 @@ func verifyOperatorSDKVersion() error {
 }
 
 func matchVersion(cmdOut *[]byte) error {
-	pattern := regexp.MustCompile(`.*version\: +v(\d.\d.\d).*commit\: +(.*)`)
+	fmt.Printf("%v", string(*cmdOut))
+	pattern := regexp.MustCompile(`.*version\: +v(\d+.\d+.\d+).*commit\: +(.*)`)
 	matches := pattern.FindStringSubmatch(string(*cmdOut))
 
 	if l := len(matches); l != 2+1 {
-		return fmt.Errorf("expected three matches, received %d instead", l)
+		return fmt.Errorf("expected three matches, received %d instead (version %v)", l, matches)
 	}
 
 	version := matches[1]
@@ -107,11 +108,11 @@ func matchVersion(cmdOut *[]byte) error {
 
 func outdatedVersion(version string) (bool, error) {
 
-	pattern := regexp.MustCompile(`^(\d)\.(\d)\.(\d)$`)
+	pattern := regexp.MustCompile(`^(\d+)\.(\d+)\.(\d+)$`)
 	matches := pattern.FindStringSubmatch(version)
 
 	if l := len(matches); l != 3+1 {
-		return true, fmt.Errorf("expected four matches, received %d instead", l)
+		return true, fmt.Errorf("expected four matches, received %d instead (version %s)", l, version)
 	}
 
 	first := matches[1]

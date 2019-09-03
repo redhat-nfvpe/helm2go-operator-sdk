@@ -29,25 +29,31 @@ func PerformResourceValidation(resourcesPath string) (*validatemap.ValidateMap, 
 		if err != nil {
 			reader := bufio.NewReader(os.Stdin)
 			if e := err.Error(); e == "deprecated" {
-				fmt.Printf("Resource: %v has a deprecated API version. Please enter 'continue' to proceed without this resource or 'stop' to exit the program: ", reflect.TypeOf(rconfig.resource))
-				text, _ := reader.ReadString('\n')
-				if isStop(text) {
+				fmt.Printf("Resource: %v has a deprecated API version. Please enter 'Y' to proceed without this resource or 'N' to exit the program: ", reflect.TypeOf(rconfig.resource))
+				c, err := reader.ReadByte()
+				if err != nil {
+					fmt.Println(err)
 					cleanUpAndExit(resourcesPath)
 				}
-				if isContinue(text) {
+				if c == []byte("Y")[0] || c == []byte("y")[0] {
 					addResourceToContinue(&validMap, file.Name())
+				} else {
+					cleanUpAndExit(resourcesPath)
 				}
 			} else if e == "unsupported" {
 
-				fmt.Printf("Resource: %v is unsupported. Please enter 'continue' to proceed without this resource, or 'stop' to exit the program: ", reflect.TypeOf(rconfig.resource))
-				text, _ := reader.ReadString('\n')
-
-				if isStop(text) {
+				fmt.Printf("Resource: %v is unsupported. Please enter 'Y' to proceed without this resource, or 'N' to exit the program: ", reflect.TypeOf(rconfig.resource))
+				c, err := reader.ReadByte()
+				if err != nil {
+					fmt.Println(err)
 					cleanUpAndExit(resourcesPath)
 				}
-				if isContinue(text) {
+				if c == []byte("Y")[0] || c == []byte("y")[0] {
 					addResourceToContinue(&validMap, file.Name())
+				} else {
+					cleanUpAndExit(resourcesPath)
 				}
+
 			} else if e == "not yaml" || e == "empty" {
 				continue
 			} else {
@@ -56,14 +62,6 @@ func PerformResourceValidation(resourcesPath string) (*validatemap.ValidateMap, 
 		}
 	}
 	return &validMap, nil
-}
-
-func isStop(text string) bool {
-	return matchString(text, "stop")
-}
-
-func isContinue(text string) bool {
-	return matchString(strings.ToLower(text), "continue")
 }
 
 func matchString(text string, contains string) bool {
