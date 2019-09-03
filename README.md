@@ -16,6 +16,18 @@ Go Operators are native Kubernetes applications used to deploy, upgrade, and man
 * [go](https://golang.org/dl/) version v1.12+
 * [operator-sdk](https://github.com/operator-framework/operator-sdk) version v0.8+
 
+## Compile and install from master
+
+```sh
+$ go get -d github.com/redhat-nfvpe/helm2go-operator-sdk # This will download the git repository and not install it
+$ cd $GOPATH/src/github.com/redhat-nfvpe/helm2go-operator-sdk
+$ git checkout master
+$ make tidy
+$ make dependency  # Installs operator sdk 
+$ make install
+```
+
+
 
 ## Quick Start
 ---
