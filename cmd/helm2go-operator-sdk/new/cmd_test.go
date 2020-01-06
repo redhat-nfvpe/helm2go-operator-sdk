@@ -172,6 +172,7 @@ func createValidCommand() *cobra.Command {
 func cleanupValidOperator() {
 	gopathDir := os.Getenv("GOPATH")
 	operatorDir := filepath.Join(gopathDir, "src", "redhat-nfvpe", "helm2go-operator-sdk", "cmd", "helm2go-operator-sdk", "new", "test-operator")
+	fmt.Println(operatorDir)
 	os.RemoveAll(operatorDir)
 }
 

@@ -1,11 +1,15 @@
 module github.com/redhat-nfvpe/helm2go-operator-sdk
 
-go 1.12
+go 1.13
 
 require (
 	github.com/Masterminds/goutils v1.1.0 // indirect
-	github.com/Masterminds/semver v1.4.2 // indirect
+	github.com/Masterminds/semver v1.5.0 // indirect
+
 	github.com/Masterminds/sprig v0.0.0-20190301161902-9f8fceff796f // indirect
+	github.com/blang/semver v3.5.1+incompatible
+	github.com/coreos/go-semver v0.3.0
+
 	github.com/cyphar/filepath-securejoin v0.2.2 // indirect
 	github.com/ghodss/yaml v0.0.0-20180820084758-c7ce16629ff4 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
@@ -26,4 +30,5 @@ require (
 	k8s.io/apimachinery v0.0.0-20190711222657-391ed67afa7b
 	k8s.io/client-go v0.0.0-20190409021438-1a26190bd76a
 	k8s.io/helm v2.14.2+incompatible
+
 )

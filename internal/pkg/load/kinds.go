@@ -7,7 +7,7 @@ import (
 )
 
 // AcceptedK8sTypes contains the supported core Kubernetes types
-var AcceptedK8sTypes = regexp.MustCompile(`(Role|ClusterRole|RoleBinding|ClusterRoleBinding|ServiceAccount|Service|Deployment)`)
+var AcceptedK8sTypes = regexp.MustCompile(`(Role|ClusterRole|RoleBinding|ClusterRoleBinding|ServiceAccount|Service|Deployment|Secret)`)
 
 type resourceConfig struct {
 	resource    interface{}

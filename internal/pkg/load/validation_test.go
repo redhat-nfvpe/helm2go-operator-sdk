@@ -17,7 +17,7 @@ func TestValidation(t *testing.T) {
 var _ = Describe("Resource Validation", func() {
 	It("Validates Resources", func() {
 		gopath := os.Getenv("GOPATH")
-		_, err := PerformResourceValidation(filepath.Join(gopath, "/src/github.com/redhat-nfvpe/helm2go-operator-sdk/test/resources"))
+		_, err := PerformResourceValidation(filepath.Join(gopath, "/src/github.com/redhat-nfvpe/helm2go-operator-sdk/test/resources"),false)
 		Expect(err).ToNot(HaveOccurred())
 	})
 })

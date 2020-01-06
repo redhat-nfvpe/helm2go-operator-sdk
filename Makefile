@@ -15,7 +15,7 @@ REPO = github.com/redhat-nfvpe/helm2go-operator-sdk
 BUILD_PATH = $(REPO)
 PKGS = $(shell go list ./... | grep -v /vendor/)
 SOURCES = $(shell find . -name '*.go' -not -path "*/vendor/*")
-export RELEASE_VERSION=v0.9.0
+export RELEASE_VERSION=v0.13.0
 dependency:
 
 	$(Q)wget  https://github.com/operator-framework/operator-sdk/releases/download/${RELEASE_VERSION}/operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu
@@ -107,6 +107,5 @@ test: test/unit
 
 test/unit:
 	$(Q)go test -count=1 -short ./cmd/...
-	$(Q)go test -count=1 -short ./pkg/...
 	$(Q)go test -count=1 -short ./internal/...
 

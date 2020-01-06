@@ -1,0 +1,78 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: release-nginx-ingress
+  namespace: 
+  labels:
+    app.kubernetes.io/name: release-nginx-ingress
+    helm.sh/chart: nginx-ingress-0.4.0
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: release
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: release-nginx-ingress
+  template:
+    metadata:
+      labels:
+        app: release-nginx-ingress
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9113"
+    spec:
+      serviceAccountName: release-nginx-ingress
+      hostNetwork: false
+      containers:
+      - image: "nginx/nginx-ingress:1.6.0"
+        name: release-nginx-ingress
+        imagePullPolicy: "IfNotPresent"
+        ports:
+        - name: http
+          containerPort: 80
+        - name: https
+          containerPort: 443
+
+        - name: prometheus
+          containerPort: 9113
+        resources:
+          {}
+          
+        securityContext:
+          allowPrivilegeEscalation: true
+          runAsUser: 101 #nginx
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - NET_BIND_SERVICE
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        args:
+          - -nginx-plus=false
+          - -nginx-configmaps=$(POD_NAMESPACE)/release-nginx-ingress
+          - -default-server-tls-secret=$(POD_NAMESPACE)/release-nginx-ingress-default-server-secret
+          - -ingress-class=nginx
+          - -use-ingress-class-only=false
+          - -health-status=false
+          - -health-status-uri=/nginx-health
+          - -nginx-debug=false
+          - -v=1
+          - -nginx-status=true
+          - -nginx-status-port=8080
+          - -nginx-status-allow-cidrs=127.0.0.1
+          - -report-ingress-status
+          - -external-service=release-nginx-ingress
+          - -enable-leader-election=true
+          - -leader-election-lock-name=release-nginx-ingress-leader-election
+          - -enable-prometheus-metrics=true
+          - -prometheus-metrics-listen-port=9113
+          - -enable-custom-resources=true
