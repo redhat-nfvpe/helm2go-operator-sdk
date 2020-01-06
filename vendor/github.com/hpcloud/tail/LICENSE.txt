@@ -1,18 +1,7 @@
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD:vendor/github.com/Masterminds/sprig/LICENSE.txt
-Sprig
-Copyright (C) 2013 Masterminds
-=======
->>>>>>> Ginkgo testing for cmd package, validation package, render package, templating package, resourcecache package
 # The MIT License (MIT)
 
 # © Copyright 2015 Hewlett Packard Enterprise Development LP
 Copyright (c) 2014 ActiveState
-<<<<<<< HEAD
-=======
->>>>>>> Ginkgo testing for cmd package, validation package, render package, templating package, resourcecache package:vendor/github.com/hpcloud/tail/LICENSE.txt
->>>>>>> Ginkgo testing for cmd package, validation package, render package, templating package, resourcecache package
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

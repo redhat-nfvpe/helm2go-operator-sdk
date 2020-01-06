@@ -72,7 +72,7 @@ func verifyOperatorSDKVersion() error {
 	if cmdOut, err = exec.Command(cmdName, cmdArgs...).Output(); err != nil {
 		return fmt.Errorf("unexpected error: %v when verifying operator-sdk version; please install operator-sdk or update to latest version", err)
 	}
-	// make sure operator-sdk is atleast version 0.8.0 or higher
+	// make sure operator-sdk is atleast version 0.13.0 or higher
 	if err = matchVersion(&cmdOut); err != nil {
 		return fmt.Errorf("unexpected error: %v when verifying operator-sdk version; please update to latest version", err)
 	}
@@ -81,11 +81,10 @@ func verifyOperatorSDKVersion() error {
 }
 
 func matchVersion(cmdOut *[]byte) error {
-	fmt.Printf("%v", string(*cmdOut))
-	pattern := regexp.MustCompile(`.*version\: +v(\d+.\d+.\d+).*commit\: +(.*)`)
+	pattern := regexp.MustCompile(`.*version\: \"+v(\d+.\d+.\d+)\".*, commit\: +(.*), go version\: +(.*)`)
 	matches := pattern.FindStringSubmatch(string(*cmdOut))
 
-	if l := len(matches); l != 2+1 {
+	if l := len(matches); l != 2+2 {
 		return fmt.Errorf("expected three matches, received %d instead (version %v)", l, matches)
 	}
 

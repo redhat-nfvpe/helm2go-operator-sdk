@@ -129,8 +129,12 @@ func yamlUnmarshalSingleResourceFromBytes(fileBytes []byte) (resourceConfig, err
 		pt = resourcecache.PackageTypeServiceAccounts
 	case *corev1.ConfigMap:
 		kt = resourcecache.KindTypeConfigMap
+		pt = resourcecache.PackageTypeConfigMaps	
+	case *corev1.Secret:
+		kt = resourcecache.KindTypeConfigMap
 		pt = resourcecache.PackageTypeConfigMaps
 	default:
+		
 
 		k := t.GetObjectKind().GroupVersionKind().Kind
 		v := t.GetObjectKind().GroupVersionKind().Version

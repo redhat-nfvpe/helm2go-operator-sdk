@@ -124,7 +124,7 @@ func (hc *HelmChartClient) DoHelmGoConversion() (*resourcecache.ResourceCache, e
 	to := filepath.Join(temp, hc.ChartName, "templates")
 
 	// perform resource validation
-	validMap, err := load.PerformResourceValidation(to)
+	validMap, err := load.PerformResourceValidation(to,true)
 	if err != nil {
 		return nil, fmt.Errorf("error performing resource validation: %v", err)
 	}
@@ -132,7 +132,7 @@ func (hc *HelmChartClient) DoHelmGoConversion() (*resourcecache.ResourceCache, e
 	// convert the helm templates to go structures
 	rcache, err := load.YAMLUnmarshalResources(to, validMap, resourcecache.NewResourceCache())
 	if err != nil {
-		return nil, fmt.Errorf("error performing yaml unmarshaling: %v", err)
+		return nil, fmt.Errorf("error performing yaml un marshaling: %v", err)
 	}
 
 	// clean up temp folder
