@@ -101,6 +101,7 @@ func yamlUnmarshalSingleResourceFromBytes(fileBytes []byte) (resourceConfig, err
 	// verify that the decoded resource kind is supported
 	var kt resourcecache.KindType
 	var pt resourcecache.PackageType
+	 
 
 	switch t := obj.(type) {
 	case *corev1.Pod:
@@ -145,12 +146,12 @@ func yamlUnmarshalSingleResourceFromBytes(fileBytes []byte) (resourceConfig, err
 				"",
 				"",
 			}, fmt.Errorf("unsupported")
-		} else if v != "v1" {
+		/*} else if v != "v1" {
 			return resourceConfig{
 				obj,
 				"",
 				"",
-			}, fmt.Errorf("deprecated")
+			}, fmt.Errorf("deprecated")*/
 		} else {
 			return resourceConfig{
 				obj,
