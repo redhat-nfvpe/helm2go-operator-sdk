@@ -1,7 +1,6 @@
 [![Build Status](https://travis-ci.org/redhat-nfvpe/service-assurance-poc.svg?branch=master)](https://travis-ci.org/redhat-nfvpe/helm2go-operator-sdk) [![Go Report Card](https://goreportcard.com/badge/github.com/redhat-nfvpe/helm2go-operator-sdk)](https://goreportcard.com/report/github.com/redhat-nfvpe/helm2go-operator-sdk)
 
-
-
+Kubernetes version 1.16 has removed several deprecated APIs that you'll likely recognize and may use on a daily basis. The apps/v1beta1 and apps/v1beta2 APIs have been completely removed. In addition, the extensions/v1beta1 API has been removed for select resources
 ## Overview
 ---
 Helm2Go-Operator-SDK (H2Go) is a tool which creates the scaffold for  Go Operators corresponding to Helm Charts in a reproducible and scalable way. Read more about the design in the [design doc](docs/Design.md).
@@ -13,8 +12,8 @@ Go Operators are native Kubernetes applications used to deploy, upgrade, and man
 ## Prerequisites
 ---
 * [git](https://git-scm.com/downloads)
-* [go](https://golang.org/dl/) version v1.12+
-* [operator-sdk](https://github.com/operator-framework/operator-sdk) version v0.8+
+* [go](https://golang.org/dl/) version v1.13+
+* [operator-sdk](https://github.com/operator-framework/operator-sdk) version v0.13+
 
 ## Compile and install from master
 
@@ -75,7 +74,7 @@ example-nginx-pod   1/1       Running   0          1m
 ---
 The tool currently supports a very limited selection of Kubernetes resources, as listed here:
 ```
-Role
+RoleKubernetes version 1.16 has removed several deprecated APIs that you'll likely recognize and may use on a daily basis. The apps/v1beta1 and apps/v1beta2 APIs have been completely removed. In addition, the extensions/v1beta1 API has been removed for select resources
 ClusterRole
 RoleBinding
 ClusterRoleBinding
